@@ -1,0 +1,51 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Reflex build artifacts (rebuilt inside container)
+.web/
+.states/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment (secrets - set via Railway dashboard)
+.env
+.env.*
+!.env.example
+
+# Tests
+tests/
+pytest.ini
+
+# Docs
+*.md
+!requirements.txt
+
+# Database local
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Logs
+*.log
+*.pid
+
+# Claude config
+.claude/
