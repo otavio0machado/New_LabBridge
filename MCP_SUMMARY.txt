@@ -1,0 +1,260 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  LABBRIDGE - CONFIGURAÇÃO COMPLETA DE MCPs                    ║
+║                             Data: 05/02/2026                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📦 MCPs RECOMENDADOS PARA SEU PROJETO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔴 TIER 1 - CRÍTICO (Fazer Primeiro)
+┌────────────────────────────────────────────────────────────────────────────┐
+│ 1. SUPABASE MCP                                                            │
+│    Função: Acesso completo ao BD PostgreSQL, queries, schemas, RLS        │
+│    Credencial: OAuth automático durante primeira uso                       │
+│    Arquivo: MCP_CONFIG_COMPLETE.json                                       │
+│    Status: Documentado em SETUP_MCP_MANUAL_STEPS.md (seção 1)             │
+│                                                                            │
+│ 2. POSTGRESQL MCP                                                          │
+│    Função: Queries SQL complexas, transações, performance analysis        │
+│    Credencial: Connection string PostgreSQL                                │
+│    Arquivo: MCP_CONFIG_COMPLETE.json                                       │
+│    Status: Documentado em SETUP_MCP_MANUAL_STEPS.md (seção 2)             │
+│                                                                            │
+│ 3. STRIPE MCP                                                              │
+│    Função: Gerenciar clientes, assinaturas, invoices, pagamentos          │
+│    Credencial: STRIPE_SECRET_KEY (sk_test_...)                            │
+│    Obter em: https://dashboard.stripe.com/apikeys                         │
+│    Status: Documentado em SETUP_MCP_MANUAL_STEPS.md (seção 3)             │
+└────────────────────────────────────────────────────────────────────────────┘
+
+🟠 TIER 2 - IMPORTANTE (Depois do Tier 1)
+┌────────────────────────────────────────────────────────────────────────────┐
+│ 4. SLACK MCP                                                               │
+│    Função: Notificações em tempo real, alertas de divergências             │
+│    Credencial: SLACK_BOT_TOKEN (xoxb-...)                                 │
+│    Obter em: https://api.slack.com/apps → Create App → OAuth             │
+│    Status: Documentado em SETUP_MCP_MANUAL_STEPS.md (seção 4)             │
+│                                                                            │
+│ 5. RESEND MCP                                                              │
+│    Função: Enviar emails, relatórios automáticos, notificações             │
+│    Credencial: RESEND_API_KEY (re_...)                                    │
+│    Obter em: https://resend.com/api-keys                                  │
+│    Status: Documentado em SETUP_MCP_MANUAL_STEPS.md (seção 5)             │
+│                                                                            │
+│ 6. AWS S3 MCP                                                              │
+│    Função: Upload/download arquivos, alternativa ao Cloudinary             │
+│    Credencial: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY                   │
+│    Obter em: https://console.aws.amazon.com/iam/                          │
+│    Status: Documentado em SETUP_MCP_MANUAL_STEPS.md (seção 7)             │
+│                                                                            │
+│ 7. FILESYSTEM MCP                                                          │
+│    Função: Ler/escrever arquivos locais, processar PDFs/CSVs              │
+│    Credencial: Nenhuma (configuração de paths)                             │
+│    Status: Documentado em SETUP_MCP_MANUAL_STEPS.md (seção 6)             │
+└────────────────────────────────────────────────────────────────────────────┘
+
+🟡 TIER 3 - COMPLEMENTAR (Opcional)
+┌────────────────────────────────────────────────────────────────────────────┐
+│ 8. GITHUB MCP                                                              │
+│    Função: Versionamento, criar issues, commits automáticos                │
+│    Credencial: GITHUB_TOKEN (ghp_...)                                     │
+│    Obter em: https://github.com/settings/tokens                           │
+│    Status: Documentado em SETUP_MCP_MANUAL_STEPS.md (seção 8)             │
+│                                                                            │
+│ 9. MEMORY MCP (Anthropic)                                                  │
+│    Função: Persistência de conhecimento entre conversas                    │
+│    Credencial: Nenhuma                                                     │
+│    Status: Documentado em SETUP_MCP_MANUAL_STEPS.md (seção 9)             │
+│                                                                            │
+│ 10. N8N MCP                                                                │
+│     Função: Workflows de automação (já implementado no projeto)            │
+│     Status: Opcional, já tem n8n_service.py                                │
+│                                                                            │
+│ 11. OPENAI MCP                                                             │
+│     Função: Fallback para IA (não recomendado, use Gemini)                │
+│     Status: Apenas para backup                                             │
+└────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📄 ARQUIVOS CRIADOS PARA VOCÊ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ MCP_CONFIG_COMPLETE.json (1,234 linhas)
+   └─ Configuração JSON de todos os 10 MCPs
+   └─ Pronto para copiar/adaptar ao seu mcp-config.json
+   └─ Inclui variáveis de ambiente necessárias
+
+✅ SETUP_MCP_MANUAL_STEPS.md (450+ linhas)
+   └─ Guia DETALHADO passo a passo
+   └─ Instrução para CADA MCP
+   └─ Como obter credenciais de cada serviço
+   └─ Testes para validar cada MCP
+   └─ Troubleshooting comum
+
+✅ MCP_QUICK_CHECKLIST.md (200 linhas)
+   └─ Versão RÁPIDA (5-10 minutos)
+   └─ Apenas o essencial
+   └─ Bom para review rápido
+
+✅ MCP_SUMMARY.txt (este arquivo)
+   └─ Visão geral visual
+   └─ Links para documentação
+
+✅ scripts/validate_mcp_credentials.py
+   └─ Script Python para validar todas as credenciais
+   └─ Uso: python scripts/validate_mcp_credentials.py
+   └─ Flags: --detailed, --generate-env
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 PRÓXIMOS PASSOS - O QUE VOCÊ PRECISA FAZER MANUALMENTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASSO 1: LER DOCUMENTAÇÃO
+⏱ Tempo: 5 minutos
+📖 Arquivo: MCP_QUICK_CHECKLIST.md
+   - Leia primeiro se estiver com pressa
+   - Resumo de tudo que precisa fazer
+
+PASSO 2: OBTER CREDENCIAIS (⚠️ IMPORTANTE)
+⏱ Tempo: 20 minutos
+📋 Checklist:
+
+   [ ] 1. Supabase (CRÍTICO)
+       → Já tem conta? Use existente ou crie em supabase.com
+       → Copie: SUPABASE_URL e SUPABASE_ANON_KEY
+
+   [ ] 2. Stripe (CRÍTICO)
+       → Vá a: dashboard.stripe.com/apikeys
+       → Copie: Secret Key (sk_test_...)
+
+   [ ] 3. Slack (Importante)
+       → Vá a: api.slack.com/apps
+       → Create App → OAuth → Copie Bot Token (xoxb-...)
+
+   [ ] 4. Resend (Importante)
+       → Vá a: resend.com/api-keys
+       → Copie: API Key (re_...)
+
+   [ ] 5. AWS S3 (Importante)
+       → Vá a: console.aws.amazon.com/iam
+       → Crie usuário → Copie Access Keys
+
+   [ ] 6. GitHub (Útil)
+       → Vá a: github.com/settings/tokens
+       → Gere token (ghp_...) com escopo 'repo'
+
+   [ ] 7. PostgreSQL (CRÍTICO)
+       → Se usar Supabase: Vá a Settings → Database → Connection String
+       → Copie connection string PostgreSQL
+
+PASSO 3: INSTALAR MCPs NO CLAUDE CODE
+⏱ Tempo: 15 minutos
+📖 Arquivo: SETUP_MCP_MANUAL_STEPS.md (seções 1-9)
+
+   Execute no terminal:
+
+   $ claude mcp add
+   (Responda conforme instruções em SETUP_MCP_MANUAL_STEPS.md)
+
+   Repita para cada MCP:
+   1. Supabase
+   2. PostgreSQL
+   3. Stripe
+   4. Slack
+   5. Resend
+   6. Filesystem
+   7. AWS S3
+   8. GitHub
+   9. Memory
+
+PASSO 4: VALIDAR CREDENCIAIS
+⏱ Tempo: 5 minutos
+🐍 Script:
+
+   $ python scripts/validate_mcp_credentials.py
+
+   Deve mostrar ✅ para todos (exceto os que não instalou)
+
+PASSO 5: TESTAR NO CLAUDE
+⏱ Tempo: 10 minutos
+💬 No prompt do Claude, teste:
+
+   - "List all tables in my Supabase project"
+   - "Get my Stripe account balance"
+   - "Post a test message to #general"
+   - Etc (veja SETUP_MCP_MANUAL_STEPS.md seção "Verificação")
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️ IMPORTANTE: SEGURANÇA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ NUNCA:
+   - Commit .env ou chaves no Git
+   - Compartilhe suas chaves API
+   - Use credenciais em production URLs de teste
+   - Deixe chaves em comentários de código
+
+✅ SEMPRE:
+   - Use arquivo .env local
+   - Adicione .env ao .gitignore
+   - Regenere chaves regularmente
+   - Use um gerenciador de secrets para produção
+   - Revise permissões IAM no AWS (princípio do menor privilégio)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📚 REFERÊNCIAS RÁPIDAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Supabase:        https://supabase.com/docs/guides/getting-started/mcp
+Stripe:          https://docs.stripe.com/mcp
+Slack:           https://docs.slack.dev/ai/mcp-server/
+Resend:          https://github.com/resend/mcp-send-email
+AWS S3:          https://awslabs.github.io/mcp/servers/s3-tables-mcp-server
+PostgreSQL:      https://github.com/modelcontextprotocol/servers/tree/main/src/postgres
+GitHub:          https://docs.github.com/en/rest
+Memory:          https://github.com/modelcontextprotocol/servers/tree/main/src/memory
+Model Context Protocol Spec: https://modelcontextprotocol.io/specification
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 ROADMAP DE IMPLEMENTAÇÃO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HOJE (5 minutos):
+   → Leia MCP_QUICK_CHECKLIST.md
+   → Entenda o que cada MCP faz
+
+AMANHÃ (30-45 minutos):
+   → Siga SETUP_MCP_MANUAL_STEPS.md passo a passo
+   → Obtenha todas as credenciais
+   → Instale MCPs no Claude Code
+
+DEPOIS (10 minutos):
+   → Rode: python scripts/validate_mcp_credentials.py
+   → Teste cada MCP no Claude
+   → Confirme que tudo funciona
+
+PRÓXIMA SEMANA:
+   → Veja: PROMPTS_CLAUDE_OPUS_4.5.md
+   → Comece Sprint 1 com IA ajudando
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✨ STATUS FINAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Documentação Completa
+✅ Configuração Template Pronta
+✅ Script de Validação
+✅ Checklist Detalhada
+✅ Pronto para Implementação
+
+Próximo: Siga MCP_QUICK_CHECKLIST.md para começar!
+
+═══════════════════════════════════════════════════════════════════════════════
+Data: 05/02/2026 | LabBridge MCP Setup v1.0
+═══════════════════════════════════════════════════════════════════════════════

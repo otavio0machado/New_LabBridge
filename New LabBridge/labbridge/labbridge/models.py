@@ -51,6 +51,7 @@ class User(BaseModel):
     """Modelo de Usuário SaaS"""
     id: str
     email: str
+    full_name: str = ""
     tenant_id: str
     role: str = "member" # owner, admin, member
     created_at: str = ""

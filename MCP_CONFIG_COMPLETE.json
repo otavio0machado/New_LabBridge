@@ -1,0 +1,196 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "name": "Supabase MCP",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "@supabase-community/supabase-mcp@latest"],
+      "disabled": false,
+      "description": "Acesso a banco de dados PostgreSQL, queries RLS, gerenciar tabelas e schemas",
+      "credentials": {
+        "authentication": "Browser OAuth (automático)",
+        "project_id": "OBTER_DO_SUPABASE_DASHBOARD"
+      }
+    },
+    "postgresql": {
+      "name": "PostgreSQL MCP",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "postgresql://user:password@localhost:5432/labbridge_db"],
+      "disabled": false,
+      "description": "Acesso direto ao PostgreSQL - queries complexas, transações, performance analysis",
+      "env": {
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PORT": "5432",
+        "POSTGRES_DATABASE": "labbridge_db",
+        "POSTGRES_USER": "seu_usuario",
+        "POSTGRES_PASSWORD": "sua_senha"
+      },
+      "credentials_note": "⚠️ APENAS PARA DESENVOLVIMENTO - nunca use com produção"
+    },
+    "stripe": {
+      "name": "Stripe MCP",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "@stripe/mcp", "--tools=all"],
+      "disabled": false,
+      "description": "Gerenciar clientes, produtos, preços, invoices, webhooks de pagamento",
+      "env": {
+        "STRIPE_SECRET_KEY": "sk_test_SEU_STRIPE_SECRET_KEY"
+      },
+      "credentials": {
+        "obtained_from": "https://dashboard.stripe.com/apikeys",
+        "environment": "test ou live"
+      }
+    },
+    "slack": {
+      "name": "Slack MCP",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "@korotovsky/slack-mcp-server"],
+      "disabled": false,
+      "description": "Postar mensagens, enviar notificações, buscar histórico de canais",
+      "env": {
+        "SLACK_BOT_TOKEN": "xoxb-SEU_SLACK_BOT_TOKEN"
+      },
+      "credentials": {
+        "obtained_from": "https://api.slack.com/apps",
+        "token_type": "Bot User OAuth Token (xoxb-...)",
+        "permissions_needed": [
+          "chat:write",
+          "channels:read",
+          "users:read",
+          "chat:write.public"
+        ]
+      }
+    },
+    "resend": {
+      "name": "Resend Email MCP",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "mcp-send-email"],
+      "disabled": false,
+      "description": "Enviar emails usando Resend API",
+      "env": {
+        "RESEND_API_KEY": "re_SEU_RESEND_API_KEY"
+      },
+      "credentials": {
+        "obtained_from": "https://resend.com/api-keys",
+        "requires_domain_verification": true
+      }
+    },
+    "s3": {
+      "name": "AWS S3 MCP",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "aws-s3-mcp", "--allow-write"],
+      "disabled": false,
+      "description": "Gerenciar buckets S3, upload/download, listar arquivos (alternativa Cloudinary)",
+      "env": {
+        "AWS_REGION": "us-east-1",
+        "AWS_ACCESS_KEY_ID": "AKIA_SEU_ACCESS_KEY",
+        "AWS_SECRET_ACCESS_KEY": "SUA_SECRET_KEY",
+        "S3_BUCKETS": "labbridge-uploads,labbridge-exports"
+      },
+      "credentials": {
+        "obtained_from": "https://console.aws.amazon.com/iam/",
+        "security_note": "Use IAM user com permissões limitadas a S3"
+      }
+    },
+    "github": {
+      "name": "GitHub MCP",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "github-mcp-server"],
+      "disabled": false,
+      "description": "Gerenciar repositório, criar issues, PRs, commits, versioning de análises",
+      "env": {
+        "GITHUB_TOKEN": "ghp_SEU_GITHUB_TOKEN",
+        "GITHUB_OWNER": "seu-usuario-ou-org",
+        "GITHUB_REPO": "labbridge"
+      },
+      "credentials": {
+        "obtained_from": "https://github.com/settings/tokens",
+        "token_type": "Personal Access Token",
+        "required_scopes": ["repo", "read:user"]
+      }
+    },
+    "filesystem": {
+      "name": "Filesystem MCP",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/labbridge"],
+      "disabled": false,
+      "description": "Acesso seguro a arquivos locais - processar PDFs, CSVs, criar arquivos",
+      "allowed_directories": [
+        "C:\\Users\\otavi\\Desktop\\New_LabBridge\\uploads",
+        "C:\\Users\\otavi\\Desktop\\New_LabBridge\\exports",
+        "C:\\Users\\otavi\\Desktop\\New_LabBridge\\labbridge"
+      ]
+    },
+    "memory": {
+      "name": "Memory MCP (Anthropic)",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "disabled": false,
+      "description": "Persistência de conhecimento em grafo de memória entre sessões"
+    },
+    "n8n": {
+      "name": "n8n Automation MCP",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "n8n-mcp"],
+      "disabled": true,
+      "description": "[OPCIONAL] Executar workflows n8n - já configurado em seu projeto",
+      "env": {
+        "N8N_BASE_URL": "http://localhost:5678",
+        "N8N_API_KEY": "SEU_N8N_API_KEY"
+      }
+    },
+    "openai": {
+      "name": "OpenAI MCP (Fallback IA)",
+      "type": "command",
+      "command": "npx",
+      "args": ["-y", "mcp-openai"],
+      "disabled": true,
+      "description": "[OPCIONAL] Fallback para OpenAI se Gemini estiver indisponível",
+      "env": {
+        "OPENAI_API_KEY": "sk-SEU_OPENAI_API_KEY"
+      }
+    }
+  },
+
+  "prioritization": {
+    "implementation_order": [
+      "supabase (CRÍTICO - BD principal)",
+      "postgresql (CRÍTICO - queries complexas)",
+      "stripe (IMPORTANTE - pagamentos)",
+      "slack (IMPORTANTE - notificações)",
+      "resend (IMPORTANTE - emails)",
+      "filesystem (IMPORTANTE - processamento de arquivos)",
+      "s3 (IMPORTANTE - alternativa Cloudinary)",
+      "github (ÚTIL - versionamento)",
+      "memory (ÚTIL - persistência entre sessões)",
+      "n8n (OPCIONAL - já implementado)",
+      "openai (OPCIONAL - fallback IA)"
+    ]
+  },
+
+  "environment_variables_template": {
+    "SUPABASE_URL": "https://seu-projeto.supabase.co",
+    "SUPABASE_KEY": "seu_anon_key",
+    "STRIPE_SECRET_KEY": "sk_test_...",
+    "SLACK_BOT_TOKEN": "xoxb-...",
+    "RESEND_API_KEY": "re_...",
+    "AWS_REGION": "us-east-1",
+    "AWS_ACCESS_KEY_ID": "AKIA...",
+    "AWS_SECRET_ACCESS_KEY": "...",
+    "GITHUB_TOKEN": "ghp_...",
+    "POSTGRES_HOST": "localhost",
+    "POSTGRES_PORT": "5432",
+    "POSTGRES_DATABASE": "labbridge_db",
+    "POSTGRES_USER": "postgres",
+    "POSTGRES_PASSWORD": "..."
+  }
+}

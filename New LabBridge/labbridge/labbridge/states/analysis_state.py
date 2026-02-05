@@ -611,7 +611,23 @@ class AnalysisState(AuthState):
         if not self.executive_summary:
             return "pending"
         return self.executive_summary.get("status", "pending")
-    
+
+    @rx.var
+    def is_from_history(self) -> bool:
+        """Indica se a analise atual foi reaberta do historico"""
+        return bool(self.selected_saved_analysis_id)
+
+    @rx.var
+    def reopened_analysis_name(self) -> str:
+        """Retorna o nome da analise reaberta se houver"""
+        if not self.selected_saved_analysis_id:
+            return ""
+        # Buscar na lista de analises salvas
+        for analysis in self.saved_analyses_list:
+            if analysis.get("id") == self.selected_saved_analysis_id:
+                return analysis.get("analysis_name", "Analise Reaberta")
+        return "Analise Reaberta"
+
     # Aliases de compatibilidade para nomes antigos
     @rx.var
     def missing_patients(self) -> List[AnalysisResult]:
@@ -853,6 +869,8 @@ class AnalysisState(AuthState):
         self.is_analyzing = True
         self.analysis_stage = "Iniciando análise..."
         self.error_message = ""
+        # Limpar referencia a analise do historico (esta e uma nova analise)
+        self.selected_saved_analysis_id = ""
         yield
         
         try:
@@ -1720,6 +1738,15 @@ class AnalysisState(AuthState):
         self.difference_breakdown = {}
         self.residual_unexplained = 0.0
         self.executive_summary = {}
+
+    def clear_analysis_for_new(self):
+        """Limpa analise reaberta do historico para iniciar nova auditoria"""
+        # Limpar referencia ao historico
+        self.selected_saved_analysis_id = ""
+        # Limpar arquivos e analise
+        self.clear_all_files()
+        # Mensagem de sucesso
+        self.success_message = "Pronto para nova auditoria!"
 
     async def generate_csvs(self):
         """Gera CSVs a partir dos PDFs"""

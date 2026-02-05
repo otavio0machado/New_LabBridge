@@ -5,10 +5,11 @@ import reflex as rx
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from ..services.team_service import team_service
+from .auth_state import AuthState
 
 
-class TeamState(rx.State):
-    """Estado para página de Usuários & Permissões"""
+class TeamState(AuthState):
+    """Estado para página de Usuários & Permissões - herda de AuthState para acesso ao tenant_id"""
 
     # Lista de membros
     team_members: List[Dict[str, Any]] = []
@@ -87,8 +88,12 @@ class TeamState(rx.State):
 
         try:
             # Obter tenant_id do usuário logado
-            # Por enquanto, usar "local" como fallback
-            tenant_id = "local"
+            tenant_id = self.current_user.tenant_id if self.current_user else None
+
+            if not tenant_id:
+                self.error_message = "Usuário não autenticado"
+                self.is_loading = False
+                return
 
             success, members, error = team_service.get_team_members(tenant_id)
 
@@ -143,9 +148,18 @@ class TeamState(rx.State):
         yield
 
         try:
-            tenant_id = "local"
-            invited_by = "admin@labbridge.com"  # Pegar do usuário logado
-            inviter_name = "Admin LabBridge"
+            # Obter tenant_id do usuário logado
+            tenant_id = self.current_user.tenant_id if self.current_user else None
+
+            if not tenant_id:
+                self.error_message = "Usuário não autenticado"
+                self.is_saving = False
+                return
+
+            # Pegar dados do usuario logado
+            invited_by = self.current_user.email if self.current_user else "usuario@labbridge.com"
+            # Usar full_name ou email como fallback
+            inviter_name = (self.current_user.full_name or self.current_user.email.split("@")[0]) if self.current_user else "Equipe LabBridge"
 
             success, invite, error = team_service.create_invite(
                 email=self.invite_email,

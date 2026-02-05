@@ -1,0 +1,197 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   CHECKLIST RÁPIDO - INSTALAÇÃO MCP SUPABASE              ║
+║                         Siga os passos abaixo                              ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+⏱️ TEMPO ESTIMADO: 5-10 minutos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASSO 1: VERIFICAR PRÉ-REQUISITOS (1 minuto)
+═════════════════════════════════════════════════════════════════════════════
+
+□ Abra PowerShell / Terminal
+
+□ Execute:
+  node --version
+
+  ✅ Esperado: v18.0.0 ou superior
+  ❌ Não tem? Baixe em: https://nodejs.org/
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASSO 2: OBTER CREDENCIAIS SUPABASE (2 minutos)
+═════════════════════════════════════════════════════════════════════════════
+
+□ Abra: https://supabase.com/dashboard
+
+□ Login com sua conta
+
+□ Selecione projeto: LabBridge
+
+□ Vá para: Settings → API
+
+□ 📋 COPIE (salve em um lugar seguro por enquanto):
+
+   Project URL:
+   https://______________________.supabase.co
+
+   Service Role Key (⚠️ SEGREDO!):
+   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+   Project ID (part before .supabase.co):
+   ______________________
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASSO 3: INSTALAR MCP GLOBALMENTE (2 minutos)
+═════════════════════════════════════════════════════════════════════════════
+
+□ No PowerShell/Terminal, execute:
+
+  npm install -g @supabase-community/supabase-mcp
+
+  ⏳ Aguarde até ver "added X packages"
+
+□ Verifique instalação:
+
+  supabase-mcp --version
+
+  ✅ Esperado: versão mostrada (ex: 1.0.0)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASSO 4: CONFIGURAR CLAUDE CODE (1-2 minutos)
+═════════════════════════════════════════════════════════════════════════════
+
+□ Abra arquivo criado para você:
+
+  C:\Users\otavi\.claude\mcp-config.json
+
+□ Substitua [AQUI] pelos valores do Passo 2:
+
+  {
+    "mcpServers": {
+      "supabase": {
+        "command": "npx",
+        "args": ["@supabase-community/supabase-mcp"],
+        "env": {
+          "SUPABASE_URL": "https://[PROJETO_ID].supabase.co",
+          "SUPABASE_SERVICE_ROLE_KEY": "[SERVICE_ROLE_KEY]",
+          "SUPABASE_PROJECT_ID": "[PROJETO_ID]"
+        }
+      }
+    }
+  }
+
+  Exemplo:
+  {
+    "mcpServers": {
+      "supabase": {
+        "command": "npx",
+        "args": ["@supabase-community/supabase-mcp"],
+        "env": {
+          "SUPABASE_URL": "https://labbridge-abc123.supabase.co",
+          "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "SUPABASE_PROJECT_ID": "labbridge-abc123"
+        }
+      }
+    }
+  }
+
+□ Salve o arquivo (Ctrl+S)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASSO 5: REINICIAR CLAUDE CODE (30 segundos)
+═════════════════════════════════════════════════════════════════════════════
+
+□ Feche Claude Code completamente
+
+□ Reabra Claude Code
+
+□ Procure por mensagem de sucesso:
+  ✅ "MCP Server supabase inicializado"
+
+  (Pode levar 5-10 segundos para conectar)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASSO 6: TESTAR CONEXÃO (1 minuto)
+═════════════════════════════════════════════════════════════════════════════
+
+□ Me envie esta mensagem:
+
+  "Teste a conexão Supabase - liste as tabelas do meu banco"
+
+□ Se ver resposta com lista de tabelas:
+  ✅ SUCESSO! A MCP está funcionando!
+
+□ Se ver erro:
+  ❌ Volte ao TROUBLESHOOTING no final deste arquivo
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RESUMO DO QUE VOCÊ FARÁ:
+
+1️⃣  Node.js check (10 segundos)
+2️⃣  Copiar credenciais Supabase (1 minuto)
+3️⃣  npm install global (2 minutos)
+4️⃣  Editar mcp-config.json (1 minuto)
+5️⃣  Reiniciar Claude Code (30 segundos)
+6️⃣  Testar (1 minuto)
+
+TOTAL: ~5-10 MINUTOS ⏱️
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TROUBLESHOOTING RÁPIDO:
+
+❌ "npm: command not found"
+   └─ Instale Node.js: https://nodejs.org/
+
+❌ "SUPABASE_URL não configurado"
+   └─ Verifique se mcp-config.json tem URL correta
+
+❌ "401 Unauthorized"
+   └─ Service Role Key pode estar errado
+      Regenere em: Supabase → Settings → API → Regenerate
+
+❌ "Port 3000 already in use"
+   └─ Feche outros processos
+      Windows: netstat -ano | findstr :3000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  SEGURANÇA - NÃO ESQUEÇA!
+
+❌ NUNCA compartilhe o Service Role Key
+❌ NUNCA commite mcp-config.json no git
+❌ NUNCA publique em repositórios públicos
+
+✅ Guarde a chave em local seguro
+✅ Regenere se vazar
+✅ Use apenas em desenvolvimento
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRÓXIMAS ETAPAS (Após confirmar MCP funcionando):
+
+1. Eu vou criar as tabelas Supabase automaticamente
+2. Configurar RLS policies para multi-tenancy
+3. Começar integração das features do RELATORIO_FUNCIONALIDADES_PENDENTES.md
+4. Implementar Sprint 1 (Auth, History, PDF, etc.)
+
+═════════════════════════════════════════════════════════════════════════════
+
+Pronto? 🚀 Comece pelo PASSO 1 acima!
+
+Qualquer dúvida, me avise no chat que ajudo!
+
+═════════════════════════════════════════════════════════════════════════════

@@ -9,12 +9,12 @@ from typing import Optional
 class SettingsState(rx.State):
     """Estado responsavel pelas configuracoes do sistema"""
 
-    # Perfil do Usuario
-    settings_name: str = "Admin LabBridge"
-    settings_email: str = "admin@biodiagnostico.com.br"
+    # Perfil do Usuario (vazio por padrao - preenchido pelo usuario)
+    settings_name: str = ""
+    settings_email: str = ""
 
-    # Dados do Laboratorio
-    lab_name: str = "Laboratorio Biodiagnostico"
+    # Dados do Laboratorio (vazio por padrao - preenchido pelo usuario)
+    lab_name: str = ""
     lab_cnpj: str = ""
     
     # === METAS ===

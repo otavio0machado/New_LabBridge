@@ -202,11 +202,38 @@ def analise_page() -> rx.Component:
                             rx.hstack(
                                 rx.icon("circle-check", color=Color.SUCCESS, size=20),
                                 rx.text("Auditoria concluída", weight="bold", color=Color.SUCCESS),
+                                # Badge de Histórico quando é análise reaberta
+                                rx.cond(
+                                    State.is_from_history,
+                                    rx.badge(
+                                        rx.hstack(
+                                            rx.icon("history", size=12),
+                                            rx.text("Historico"),
+                                            spacing="1",
+                                            align="center",
+                                        ),
+                                        color_scheme="blue",
+                                        size="1",
+                                        variant="soft",
+                                    ),
+                                    rx.fragment(),
+                                ),
                                 spacing="2",
                                 align="center",
                             ),
                             rx.spacer(),
                             rx.hstack(
+                                # Botao Nova Analise (quando reaberta do historico)
+                                rx.cond(
+                                    State.is_from_history,
+                                    ui.button(
+                                        "Nova Analise",
+                                        icon="plus",
+                                        variant="outline",
+                                        on_click=State.clear_analysis_for_new,
+                                    ),
+                                    rx.fragment(),
+                                ),
                                 save_analysis_modal(),
                                 ui.button(
                                     "Exportar CSV",

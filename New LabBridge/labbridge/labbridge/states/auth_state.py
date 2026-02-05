@@ -144,6 +144,7 @@ class AuthState(rx.State):
                 self.current_user = User(
                     id=user_data.get("id", ""),
                     email=user_data.get("email", self.login_email),
+                    full_name=profile_data.get("full_name", "") if profile_data else "",
                     tenant_id=profile_data.get("tenant_id", "") if profile_data else "",
                     role=profile_data.get("role", "member") if profile_data else "member",
                     created_at=user_data.get("created_at", "")
@@ -318,7 +319,42 @@ class AuthState(rx.State):
     @rx.var
     def is_admin(self) -> bool:
         """Verifica se usuario e admin ou owner"""
-        return self.user_role in ["owner", "admin"]
+        return self.user_role in ["owner", "admin", "admin_global", "admin_lab"]
+
+    @rx.var
+    def is_analyst(self) -> bool:
+        """Verifica se usuario e analyst ou superior"""
+        return self.user_role in ["owner", "admin", "admin_global", "admin_lab", "analyst", "member"]
+
+    @rx.var
+    def is_viewer(self) -> bool:
+        """Verifica se usuario e viewer ou superior (todos)"""
+        return bool(self.user_role)
+
+    @rx.var
+    def can_create_analysis(self) -> bool:
+        """Verifica se pode criar analises"""
+        return self.user_role in ["owner", "admin", "admin_global", "admin_lab", "analyst", "member"]
+
+    @rx.var
+    def can_delete_analysis(self) -> bool:
+        """Verifica se pode deletar analises"""
+        return self.user_role in ["owner", "admin", "admin_global", "admin_lab"]
+
+    @rx.var
+    def can_export_data(self) -> bool:
+        """Verifica se pode exportar dados"""
+        return self.user_role in ["owner", "admin", "admin_global", "admin_lab", "analyst", "member"]
+
+    @rx.var
+    def can_manage_team(self) -> bool:
+        """Verifica se pode gerenciar equipe"""
+        return self.user_role in ["owner", "admin", "admin_global", "admin_lab"]
+
+    @rx.var
+    def can_manage_settings(self) -> bool:
+        """Verifica se pode gerenciar configuracoes"""
+        return self.user_role in ["owner", "admin", "admin_global", "admin_lab"]
 
     # =========================================================================
     # OAUTH SOCIAL LOGIN
@@ -401,11 +437,12 @@ class AuthState(rx.State):
                 self.current_user = User(
                     id=user.get("id", ""),
                     email=user.get("email", ""),
+                    full_name=profile.get("full_name", "") if profile else "",
                     tenant_id=profile.get("tenant_id", "") if profile else "",
                     role=profile.get("role", "member") if profile else "member",
                     created_at=user.get("created_at", "")
                 )
-                
+
                 self.is_authenticated = True
                 return rx.redirect("/")
             else:
