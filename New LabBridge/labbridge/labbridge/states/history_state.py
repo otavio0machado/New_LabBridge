@@ -6,9 +6,10 @@ import reflex as rx
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 import base64
+from .auth_state import AuthState
 
 
-class HistoryState(rx.State):
+class HistoryState(AuthState):
     """Estado responsável pelo histórico de auditorias"""
 
     # Filtros
@@ -32,13 +33,17 @@ class HistoryState(rx.State):
     # SETTERS
     # =========================================================================
 
-    def set_status_filter(self, value: str):
-        """Filtra por status"""
+    async def set_status_filter(self, value: str):
+        """Filtra por status e recarrega"""
         self.status_filter = value
+        yield
+        await self.load_history_data()
 
-    def set_date_filter(self, value: str):
-        """Filtra por data"""
+    async def set_date_filter(self, value: str):
+        """Filtra por data e recarrega"""
         self.date_filter = value
+        yield
+        await self.load_history_data()
 
     def set_search_query(self, value: str):
         """Filtra por busca"""
@@ -107,13 +112,13 @@ class HistoryState(rx.State):
 
     async def load_history_data(self):
         """Carrega histórico filtrado do banco"""
-        from ..services.local_storage import local_storage
-        
+        from ..services.saved_analysis_service import saved_analysis_service
+
         try:
-            tenant_id = "local"
-            
-            # Buscar análises
-            all_analyses = local_storage.get_saved_analyses(tenant_id, limit=500)
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
+
+            # Buscar análises com campos formatados
+            all_analyses = saved_analysis_service.get_saved_analyses(tenant_id=tenant_id, limit=500)
             
             # Aplicar filtros
             filtered = []
@@ -155,7 +160,7 @@ class HistoryState(rx.State):
             }
             
             # Carregar logs de atividade
-            self._load_activity_log()
+            self.load_activity_log()
             
         except Exception as e:
             print(f"Erro ao carregar histórico: {e}")
@@ -163,9 +168,9 @@ class HistoryState(rx.State):
     def load_activity_log(self):
         """Carrega log de atividades do banco"""
         from ..services.local_storage import local_storage
-        
+
         try:
-            tenant_id = "local"
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
             logs = local_storage.get_activity_logs(tenant_id, limit=50)
             self.activity_log = logs
         except Exception as e:
@@ -182,7 +187,7 @@ class HistoryState(rx.State):
         
         try:
             local_storage.add_activity_log(
-                tenant_id="local",
+                tenant_id=self.current_user.tenant_id if self.current_user else "",
                 action=action,
                 details=details,
                 user=user

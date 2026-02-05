@@ -89,7 +89,7 @@ def input_area() -> rx.Component:
                 ),
                 bg="transparent",
                 color=rx.cond(State.image_files.length() > 0, Color.PRIMARY, Color.TEXT_SECONDARY),
-                _hover={"color": Color.PRIMARY, "bg": "rgba(76, 175, 80, 0.1)"},
+                _hover={"color": Color.PRIMARY, "bg": Color.SUCCESS_BG},
                 cursor="pointer",
                 border="none",
                 box_shadow="none",
@@ -180,7 +180,7 @@ def thinking_trace() -> rx.Component:
             ),
             padding=Spacing.MD,
             margin_bottom=Spacing.MD,
-            bg="rgba(76, 175, 80, 0.05)",
+            bg=Color.SUCCESS_BG,
             border_left=f"3px solid {Color.PRIMARY}",
             border_radius=Design.RADIUS_MD,
             width="100%",
@@ -211,15 +211,30 @@ def insight_chat_page() -> rx.Component:
                 rx.vstack(
                     # Chat History Container
                     rx.scroll_area(
-                        rx.vstack(
-                            rx.foreach(
-                                State.messages,
-                                chat_bubble
+                        rx.cond(
+                            State.messages.length() > 0,
+                            rx.vstack(
+                                rx.foreach(
+                                    State.messages,
+                                    chat_bubble
+                                ),
+                                width="100%",
+                                spacing="4",
                             ),
-                            width="100%",
-                            spacing="4",
+                            rx.center(
+                                rx.vstack(
+                                    rx.icon("message-circle", size=48, color=Color.TEXT_SECONDARY),
+                                    rx.text("Faca uma pergunta sobre seus dados", color=Color.TEXT_SECONDARY),
+                                    rx.text("Ex: 'Qual o maior motivo de glosa?'", font_size="0.85rem", color=Color.TEXT_SECONDARY),
+                                    align="center",
+                                    spacing="2",
+                                ),
+                                height="100%",
+                            ),
                         ),
-                        height="500px",
+                        min_height="300px",
+                        height="calc(100vh - 400px)",
+                        max_height="600px",
                         type="always",
                         scrollbars="vertical",
                         style={"paddingRight": "1rem"}
@@ -242,11 +257,13 @@ def insight_chat_page() -> rx.Component:
                     box_shadow=Design.SHADOW_DEFAULT,
                     border="1px solid " + Color.BORDER,
                     width="100%",
-                    height="620px",
+                    min_height="500px",
+                    height="calc(100vh - 250px)",
+                    max_height="80vh",
                     justify="between",
                 ),
                 width="100%",
-                max_width="800px",
+                max_width="900px",
                 margin_x="auto",
             ),
             

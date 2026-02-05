@@ -98,7 +98,7 @@ def save_analysis_modal() -> rx.Component:
                         ),
                         rx.hstack(
                             rx.text("Divergências:", size="1", color=Color.TEXT_SECONDARY),
-                            rx.text(f"{State.divergences_count}", size="1", weight="medium"),
+                            rx.text(State.divergences_count.to(str), size="1", weight="medium"),
                             spacing="1",
                         ),
                         spacing="1",
@@ -223,16 +223,40 @@ def saved_analyses_list() -> rx.Component:
                         size="1",
                         variant="ghost",
                         color_scheme="blue",
-                        on_click=lambda: State.load_saved_analysis(analysis["id"]),
+                        on_click=State.load_saved_analysis(analysis["id"]),
                         title="Carregar análise",
                     ),
-                    rx.icon_button(
-                        rx.icon(tag="trash-2", size=14),
-                        size="1",
-                        variant="ghost",
-                        color_scheme="red",
-                        on_click=lambda: State.delete_saved_analysis(analysis["id"]),
-                        title="Deletar análise",
+                    rx.alert_dialog.root(
+                        rx.alert_dialog.trigger(
+                            rx.icon_button(
+                                rx.icon(tag="trash-2", size=14),
+                                size="1",
+                                variant="ghost",
+                                color_scheme="red",
+                                title="Deletar análise",
+                            ),
+                        ),
+                        rx.alert_dialog.content(
+                            rx.alert_dialog.title("Excluir Analise"),
+                            rx.alert_dialog.description(
+                                "Tem certeza que deseja excluir esta analise salva?"
+                            ),
+                            rx.flex(
+                                rx.alert_dialog.cancel(
+                                    rx.button("Cancelar", variant="soft", color_scheme="gray"),
+                                ),
+                                rx.alert_dialog.action(
+                                    rx.button(
+                                        "Excluir",
+                                        color_scheme="red",
+                                        on_click=State.delete_saved_analysis(analysis["id"]),
+                                    ),
+                                ),
+                                spacing="3",
+                                justify="end",
+                                margin_top="16px",
+                            ),
+                        ),
                     ),
                     spacing="1",
                 ),
@@ -302,18 +326,3 @@ def saved_analyses_list() -> rx.Component:
     )
 
 
-def save_analysis_button() -> rx.Component:
-    """Botão compacto para salvar análise (para usar em toolbars)"""
-    from ..state import State
-    
-    return rx.tooltip(
-        rx.icon_button(
-            rx.icon(tag="save", size=18),
-            size="2",
-            variant="soft",
-            color_scheme="green",
-            on_click=State.open_save_modal,
-            disabled=~State.has_analysis,
-        ),
-        content="Salvar esta análise",
-    )

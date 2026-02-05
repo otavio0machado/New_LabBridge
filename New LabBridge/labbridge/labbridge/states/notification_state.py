@@ -5,9 +5,10 @@ Centro de notificações do LabBridge
 import reflex as rx
 from typing import List, Dict, Any
 from datetime import datetime
+from .auth_state import AuthState
 
 
-class NotificationState(rx.State):
+class NotificationState(AuthState):
     """Estado responsável pelas notificações in-app"""
 
     # Lista de notificações
@@ -55,7 +56,7 @@ class NotificationState(rx.State):
         self.is_loading = True
         
         try:
-            tenant_id = "local"
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
             notifications = local_storage.get_notifications(tenant_id, limit=50)
             self.notifications = notifications
         except Exception as e:
@@ -82,9 +83,9 @@ class NotificationState(rx.State):
     def mark_all_read(self):
         """Marca todas como lidas"""
         from ..services.local_storage import local_storage
-        
+
         try:
-            tenant_id = "local"
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
             local_storage.mark_all_notifications_read(tenant_id)
             
             # Atualizar lista local
@@ -96,9 +97,9 @@ class NotificationState(rx.State):
     def clear_notifications(self):
         """Limpa todas as notificações"""
         from ..services.local_storage import local_storage
-        
+
         try:
-            tenant_id = "local"
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
             local_storage.clear_notifications(tenant_id)
             self.notifications = []
         except Exception as e:
@@ -114,7 +115,7 @@ class NotificationState(rx.State):
         message: str,
         type: str = "info",  # info, success, warning, error
         action_url: str = None,
-        tenant_id: str = "local"
+        tenant_id: str = ""
     ):
         """Cria uma nova notificação"""
         from ..services.local_storage import local_storage

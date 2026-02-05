@@ -1,6 +1,43 @@
-assets/external/
+# Secrets
+.env
+*.key
+*.pem
+!.env.example
+
+# Reflex
 .web
-__pycache__/
 .states
-*.db
+assets/external/
+
+# Python
+__pycache__/
 *.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+build/
+dist/
+node_modules/
+
+# Logs
+*.log
+*.pid

@@ -10,7 +10,6 @@ Conteudo:
 """
 import reflex as rx
 from ..state import State
-from ..states.analysis_state import AnalysisState
 from ..states.history_state import HistoryState
 from ..styles import Color, Design, Spacing, TextSize
 from ..components import ui
@@ -29,14 +28,34 @@ def timeline_item(
     on_reopen=None,
 ) -> rx.Component:
     """Item da linha do tempo"""
-    status_config = {
-        "Concluido": (Color.SUCCESS, Color.SUCCESS_BG, "circle-check"),
-        "Em Analise": (Color.WARNING, Color.WARNING_BG, "clock"),
-        "Pendente": (Color.TEXT_SECONDARY, Color.BACKGROUND, "circle"),
-        "Erro": (Color.ERROR, Color.ERROR_BG, "circle-x"),
-        "Reaberto": (Color.PRIMARY, Color.PRIMARY_LIGHT, "refresh-cw"),
-    }
-    color, bg, icon = status_config.get(status, status_config["Pendente"])
+    # rx.match para suportar rx.Var (vindo de rx.foreach)
+    color = rx.match(
+        status,
+        ("Concluido", Color.SUCCESS),
+        ("Em Analise", Color.WARNING),
+        ("Pendente", Color.TEXT_SECONDARY),
+        ("Erro", Color.ERROR),
+        ("Reaberto", Color.PRIMARY),
+        Color.TEXT_SECONDARY,
+    )
+    bg = rx.match(
+        status,
+        ("Concluido", Color.SUCCESS_BG),
+        ("Em Analise", Color.WARNING_BG),
+        ("Pendente", Color.BACKGROUND),
+        ("Erro", Color.ERROR_BG),
+        ("Reaberto", Color.PRIMARY_LIGHT),
+        Color.BACKGROUND,
+    )
+    icon = rx.match(
+        status,
+        ("Concluido", "circle-check"),
+        ("Em Analise", "clock"),
+        ("Pendente", "circle"),
+        ("Erro", "circle-x"),
+        ("Reaberto", "refresh-cw"),
+        "circle",
+    )
 
     return rx.hstack(
         # Timeline dot and line
@@ -219,8 +238,8 @@ def render_saved_analysis_item(analysis: dict) -> rx.Component:
         time_label,
         status_label,
         user="Sistema",
-        on_view=lambda: State.open_saved_analysis(analysis_id),
-        on_reopen=lambda: State.open_saved_analysis(analysis_id),
+        on_view=State.open_saved_analysis(analysis_id),
+        on_reopen=State.open_saved_analysis(analysis_id),
     )
 
 
@@ -307,7 +326,7 @@ def history_page() -> rx.Component:
                             rx.text("Linha do Tempo", font_weight="600", color=Color.TEXT_PRIMARY),
                             rx.spacer(),
                             rx.text(
-                                AnalysisState.saved_analyses_list.length().to_string() + " analises",
+                                HistoryState.filtered_analyses.length().to_string() + " analises",
                                 font_size="0.875rem",
                                 color=Color.TEXT_SECONDARY
                             ),
@@ -316,9 +335,9 @@ def history_page() -> rx.Component:
                             margin_bottom=Spacing.LG,
                         ),
                         rx.cond(
-                            AnalysisState.saved_analyses_list.length() > 0,
+                            HistoryState.filtered_analyses.length() > 0,
                             rx.vstack(
-                                rx.foreach(AnalysisState.saved_analyses_list, render_saved_analysis_item),
+                                rx.foreach(HistoryState.filtered_analyses, render_saved_analysis_item),
                                 spacing="0",
                                 width="100%",
                             ),
@@ -351,7 +370,7 @@ def history_page() -> rx.Component:
                             rx.grid(
                                 rx.vstack(
                                     rx.text(
-                                        AnalysisState.saved_analyses_list.length().to_string(),
+                                        HistoryState.filtered_analyses.length().to_string(),
                                         font_size="1.5rem",
                                         font_weight="700",
                                         color=Color.DEEP
@@ -362,34 +381,34 @@ def history_page() -> rx.Component:
                                 ),
                                 rx.vstack(
                                     rx.text(
-                                        AnalysisState.saved_analyses_list.length().to_string(),
+                                        HistoryState.stats_total_compulab,
                                         font_size="1.5rem",
                                         font_weight="700",
                                         color=Color.SUCCESS
                                     ),
-                                    rx.text("Concluidas", font_size="0.75rem", color=Color.TEXT_SECONDARY),
+                                    rx.text("Compulab", font_size="0.75rem", color=Color.TEXT_SECONDARY),
                                     spacing="0",
                                     align="center",
                                 ),
                                 rx.vstack(
                                     rx.text(
-                                        "0",
+                                        HistoryState.stats_total_simus,
                                         font_size="1.5rem",
                                         font_weight="700",
                                         color=Color.WARNING_HOVER
                                     ),
-                                    rx.text("Em Analise", font_size="0.75rem", color=Color.TEXT_SECONDARY),
+                                    rx.text("Simus", font_size="0.75rem", color=Color.TEXT_SECONDARY),
                                     spacing="0",
                                     align="center",
                                 ),
                                 rx.vstack(
                                     rx.text(
-                                        "0",
+                                        HistoryState.stats_total_difference,
                                         font_size="1.5rem",
                                         font_weight="700",
                                         color=Color.PRIMARY
                                     ),
-                                    rx.text("Reabertas", font_size="0.75rem", color=Color.TEXT_SECONDARY),
+                                    rx.text("Diferenca", font_size="0.75rem", color=Color.TEXT_SECONDARY),
                                     spacing="0",
                                     align="center",
                                 ),
@@ -423,10 +442,10 @@ def history_page() -> rx.Component:
                                 margin_bottom=Spacing.MD,
                             ),
                             rx.cond(
-                                AnalysisState.saved_analyses_list.length() > 0,
+                                HistoryState.filtered_analyses.length() > 0,
                                 rx.vstack(
                                     audit_log_item("Ultima analise salva", "Sistema", "Recente", "Via LabBridge"),
-                                    audit_log_item("Analises carregadas", "Sistema", "On mount", f"{AnalysisState.saved_analyses_list.length()} itens"),
+                                    audit_log_item("Analises carregadas", "Sistema", "On mount", HistoryState.filtered_analyses.length().to_string() + " itens"),
                                     spacing="0",
                                     width="100%",
                                 ),
@@ -457,5 +476,5 @@ def history_page() -> rx.Component:
             spacing="0",
         ),
         width="100%",
-        on_mount=[State.load_saved_analyses, HistoryState.load_activity_log],
+        on_mount=HistoryState.load_history_data,
     )

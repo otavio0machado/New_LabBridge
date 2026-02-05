@@ -4,14 +4,14 @@ Gerencia as configuracoes do usuario e laboratorio.
 """
 import reflex as rx
 from typing import Optional
+from .auth_state import AuthState
 
 
-class SettingsState(rx.State):
+class SettingsState(AuthState):
     """Estado responsavel pelas configuracoes do sistema"""
 
     # Perfil do Usuario (vazio por padrao - preenchido pelo usuario)
     settings_name: str = ""
-    settings_email: str = ""
 
     # Dados do Laboratorio (vazio por padrao - preenchido pelo usuario)
     lab_name: str = ""
@@ -36,6 +36,7 @@ class SettingsState(rx.State):
     # === SEGURANCA ===
     two_factor_enabled: bool = False
     session_timeout: str = "30"  # minutos
+    # Senhas (transientes - limpas apos uso)
     current_password: str = ""
     new_password: str = ""
     confirm_password: str = ""
@@ -67,7 +68,7 @@ class SettingsState(rx.State):
             # Remover formatação
             clean = value.replace("R$", "").replace(".", "").replace(",", ".").strip()
             self.monthly_goal = float(clean) if clean else 150000.0
-        except:
+        except (ValueError, TypeError):
             self.monthly_goal = 150000.0
         self.settings_message = ""
 
@@ -141,9 +142,11 @@ class SettingsState(rx.State):
                 return
 
             # Preparar dados para salvar
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
+            user_id = self.current_user.id if self.current_user else ""
             settings_data = {
-                "tenant_id": "local",
-                "user_id": "local-admin",
+                "tenant_id": tenant_id,
+                "user_id": user_id,
                 "settings_name": self.settings_name,
                 "lab_name": self.lab_name,
                 "lab_cnpj": self.lab_cnpj,
@@ -183,7 +186,9 @@ class SettingsState(rx.State):
         from ..services.local_storage import local_storage
 
         try:
-            settings = local_storage.get_user_settings("local", "local-admin")
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
+            user_id = self.current_user.id if self.current_user else ""
+            settings = local_storage.get_user_settings(tenant_id, user_id)
             if settings:
                 self.settings_name = settings.get("settings_name", self.settings_name)
                 self.lab_name = settings.get("lab_name", self.lab_name)
@@ -233,18 +238,40 @@ class SettingsState(rx.State):
                 yield
                 return
 
-            # TODO: Integrar com Supabase Auth
-            import asyncio
-            await asyncio.sleep(1)
+            if self.new_password == self.current_password:
+                self.password_error = "A nova senha deve ser diferente da atual"
+                self.is_changing_password = False
+                yield
+                return
 
-            # Limpa campos
-            self.current_password = ""
-            self.new_password = ""
-            self.confirm_password = ""
-            self.is_changing_password = False
-            self.password_error = ""
+            # Trocar senha via Supabase Auth
+            from ..services.auth_service import auth_service
 
-            yield rx.toast.success("Senha alterada com sucesso!")
+            user_email = self.current_user.email if self.current_user else ""
+            if not user_email:
+                self.password_error = "Usuario nao autenticado"
+                self.is_changing_password = False
+                yield
+                return
+
+            success, message = auth_service.verify_and_change_password(
+                email=user_email,
+                current_password=self.current_password,
+                new_password=self.new_password
+            )
+
+            if success:
+                # Limpa campos
+                self.current_password = ""
+                self.new_password = ""
+                self.confirm_password = ""
+                self.is_changing_password = False
+                self.password_error = ""
+                yield rx.toast.success(message)
+            else:
+                self.password_error = message
+                self.is_changing_password = False
+                yield
 
         except Exception as e:
             self.password_error = f"Erro: {str(e)}"

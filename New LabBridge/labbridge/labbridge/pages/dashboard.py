@@ -237,7 +237,7 @@ def render_recent_audit_item(analysis: dict) -> rx.Component:
         cursor="pointer",
         transition="all 0.15s ease",
         _hover={"bg": Color.PRIMARY_LIGHT},
-        on_click=lambda: AnalysisState.open_saved_analysis(analysis_id),
+        on_click=AnalysisState.open_saved_analysis(analysis_id),
     )
 
 
@@ -264,24 +264,24 @@ def dashboard_page() -> rx.Component:
                     value=State.formatted_compulab_total,
                     icon="banknote",
                     trend=rx.cond(State.financial_growth_day >= 0, "up", "down"),
-                    trend_value=f"{State.financial_growth_day}%",
+                    trend_value=State.financial_growth_day.to(str) + "%",
                     color="primary",
                 ),
                 kpi_card(
                     label="Divergencias Encontradas",
-                    value=f"{State.divergences_count}",
+                    value=State.divergences_count.to(str),
                     icon="triangle-alert",
                     color="warning",
                 ),
                 kpi_card(
                     label="Auditorias Concluidas",
-                    value=f"{State.dashboard_approval_rate}%",
+                    value=State.dashboard_approval_rate.to(str) + "%",
                     icon="circle-check",
                     color="success",
                 ),
                 kpi_card(
                     label="Pacientes Processados",
-                    value=f"{State.total_patients_count}",
+                    value=State.total_patients_count.to(str),
                     icon="users",
                     color="primary",
                 ),
@@ -367,14 +367,14 @@ def dashboard_page() -> rx.Component:
                                     spacing="2",
                                 ),
                                 rx.spacer(),
-                                rx.text(f"{State.goal_progress}%", font_weight="700", color=Color.PRIMARY),
+                                rx.text(State.goal_progress.to(str) + "%", font_weight="700", color=Color.PRIMARY),
                                 width="100%",
                                 align="center",
                             ),
                             # Progress bar
                             rx.box(
                                 rx.box(
-                                    width=f"{State.goal_progress}%",
+                                    width=State.goal_progress.to(str) + "%",
                                     height="100%",
                                     bg=Color.GRADIENT_PRIMARY,
                                     border_radius="full",
@@ -389,7 +389,7 @@ def dashboard_page() -> rx.Component:
                             rx.hstack(
                                 rx.text(State.formatted_compulab_total, font_size="0.875rem", color=Color.TEXT_SECONDARY),
                                 rx.spacer(),
-                                rx.text(f"Meta: {State.formatted_monthly_goal}", font_size="0.875rem", color=Color.TEXT_SECONDARY),
+                                rx.text("Meta: " + State.formatted_monthly_goal, font_size="0.875rem", color=Color.TEXT_SECONDARY),
                                 width="100%",
                             ),
                             spacing="3",

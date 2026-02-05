@@ -17,19 +17,25 @@ class BaseRepository(Generic[T]):
         """Retorna o cliente Supabase Singleton"""
         return supabase
 
-    def get_all(self) -> List[Dict[str, Any]]:
-        """Retorna todos os registros da tabela."""
+    def get_all(self, tenant_id: str = "", limit: int = 100) -> List[Dict[str, Any]]:
+        """Retorna registros da tabela filtrados por tenant_id."""
         try:
-            response = self.client.table(self.table_name).select("*").execute()
-            return response.data
+            query = self.client.table(self.table_name).select("*")
+            if tenant_id:
+                query = query.eq("tenant_id", tenant_id)
+            response = query.limit(limit).execute()
+            return response.data if response.data else []
         except Exception as e:
             print(f"Erro ao buscar dados em {self.table_name}: {e}")
             return []
 
-    def get_by_id(self, id: str) -> Optional[Dict[str, Any]]:
-        """Retorna um registro pelo ID."""
+    def get_by_id(self, id: str, tenant_id: str = "") -> Optional[Dict[str, Any]]:
+        """Retorna um registro pelo ID, opcionalmente filtrado por tenant."""
         try:
-            response = self.client.table(self.table_name).select("*").eq("id", id).execute()
+            query = self.client.table(self.table_name).select("*").eq("id", id)
+            if tenant_id:
+                query = query.eq("tenant_id", tenant_id)
+            response = query.execute()
             if response.data:
                 return response.data[0]
             return None
@@ -59,12 +65,13 @@ class BaseRepository(Generic[T]):
             print(f"Erro ao atualizar ID {id} em {self.table_name}: {e}")
             return None
 
-    def delete(self, id: str) -> bool:
-        """Deleta um registro pelo ID."""
+    def delete(self, id: str, tenant_id: str = "") -> bool:
+        """Deleta um registro pelo ID, opcionalmente filtrado por tenant."""
         try:
-            # Em alguns casos queremos soft delete, mas o base repository faz delete real.
-            # Classes filhas devem sobrescrever se quiserem soft delete.
-            self.client.table(self.table_name).delete().eq("id", id).execute()
+            query = self.client.table(self.table_name).delete().eq("id", id)
+            if tenant_id:
+                query = query.eq("tenant_id", tenant_id)
+            query.execute()
             return True
         except Exception as e:
             print(f"Erro ao deletar ID {id} em {self.table_name}: {e}")

@@ -1,10 +1,14 @@
 import reflex as rx
 from typing import List, Dict, Any
+import asyncio
 import json
+import logging
 import os
 from ..ai.services.detective_service import DetectiveService
 from ..ai.mock_data import get_mock_divergency_data
 from .ai_state import AIState
+
+logger = logging.getLogger(__name__)
 
 # Flag para usar n8n (se configurado)
 USE_N8N = bool(os.getenv("N8N_WEBHOOK_URL"))
@@ -82,14 +86,14 @@ class DetectiveState(AIState):
 
             if data_list:
                 self.data_context = json.dumps(data_list, indent=2, ensure_ascii=False)
-                print(f"DEBUG: DetectiveState loaded REAL data context ({len(data_list)} items).")
+                logger.debug(f"DetectiveState loaded REAL data context ({len(data_list)} items).")
             else:
                  self.data_context = "Nenhuma divergência encontrada na análise atual."
         
         # Fallback para Mock se não houver contexto (e não houve análise)
         elif not self.data_context:
             self.data_context = get_mock_divergency_data()
-            print("DEBUG: DetectiveState loaded MOCK data context.")
+            logger.debug("DetectiveState loaded MOCK data context.")
 
     async def handle_image_upload(self, files: List[rx.UploadFile]):
         """Lê os arquivos de imagem e armazena em memória."""

@@ -6,9 +6,10 @@ import reflex as rx
 from typing import List, Dict, Any
 from datetime import datetime
 import base64
+from .auth_state import AuthState
 
 
-class ReportsState(rx.State):
+class ReportsState(AuthState):
     """Estado responsavel pelos relatorios"""
 
     # Filtros
@@ -67,7 +68,8 @@ class ReportsState(rx.State):
         """Busca todas as análises salvas"""
         from ..services.local_storage import local_storage
         try:
-            analyses = local_storage.get_saved_analyses("local", limit=500)
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
+            analyses = local_storage.get_saved_analyses(tenant_id, limit=500)
             return analyses
         except Exception as e:
             print(f"Erro ao buscar análises: {e}")

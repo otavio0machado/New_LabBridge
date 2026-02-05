@@ -1,8 +1,11 @@
 import reflex as rx
 import asyncio
+import logging
 from typing import List, Dict, Any, Optional
 from .analysis_state import AnalysisState
 from ..services.ai_service import ai_service, AVAILABLE_MODELS
+
+logger = logging.getLogger(__name__)
 
 class AIState(AnalysisState):
     """Estado responsável pela integração com IA (OpenAI, Gemini)"""
@@ -17,8 +20,6 @@ class AIState(AnalysisState):
     ai_error: str = ""
     
     # Resultados
-    ai_analysis_data: List[Dict[str, Any]] = []
-    ai_analysis_csv: str = ""  # CSV data URI para download
     ai_analysis: str = ""  # Texto bruto do relatório
     
     @rx.var
@@ -59,16 +60,16 @@ class AIState(AnalysisState):
         self.ai_model = val
         self.ai_error = ""
 
-    # OpenAI specific (used in some components)
-    openai_api_key: str = ""
+    # OpenAI specific (backend-only - not sent to frontend)
+    _openai_api_key: str = ""
 
     def set_api_key(self, key: str):
         """Define a chave de API da OpenAI"""
-        self.openai_api_key = key
+        self._openai_api_key = key
         
     async def run_ai_analysis(self):
         """Executa a análise de IA usando o provedor e modelo selecionados"""
-        print(f"DEBUG: run_ai_analysis STARTED - provider={self.ai_provider}, model={self.ai_model}")
+        logger.debug(f"run_ai_analysis STARTED - provider={self.ai_provider}, model={self.ai_model}")
         self.is_generating_ai = True
         self.ai_error = ""
         self.ai_loading_text = f"Conectando ao {self.ai_provider}..."
@@ -109,7 +110,7 @@ class AIState(AnalysisState):
             # Isso resolve o problema de texto "bugado" e com espaços anormais
             self.ai_analysis = result.replace("$", "\\$")
             self.ai_loading_text = "Relatório gerado com sucesso!"
-            print(f"DEBUG: run_ai_analysis SUCCESS - {len(result)} caracteres")
+            logger.debug(f"run_ai_analysis SUCCESS - {len(result)} caracteres")
             yield
             
             # Pequena pausa para usuário ver mensagem de sucesso
@@ -117,21 +118,21 @@ class AIState(AnalysisState):
             
         except ImportError as e:
             error_msg = str(e)
-            print(f"DEBUG: run_ai_analysis IMPORT ERROR: {e}")
+            logger.debug(f"run_ai_analysis IMPORT ERROR: {e}")
             self.ai_error = f"Pacote não instalado: {error_msg}"
             self.ai_analysis = f"❌ **Erro de Dependência**\n\n{error_msg}\n\nInstale o pacote necessário e tente novamente."
             yield
             
         except ValueError as e:
             error_msg = str(e)
-            print(f"DEBUG: run_ai_analysis CONFIG ERROR: {e}")
+            logger.debug(f"run_ai_analysis CONFIG ERROR: {e}")
             self.ai_error = error_msg
             self.ai_analysis = f"❌ **Erro de Configuração**\n\n{error_msg}\n\nVerifique o arquivo `.env`."
             yield
             
         except Exception as e:
             error_msg = str(e)
-            print(f"DEBUG: run_ai_analysis ERROR: {e}")
+            logger.debug(f"run_ai_analysis ERROR: {e}")
             import traceback
             traceback.print_exc()
             self.ai_error = error_msg
@@ -141,11 +142,11 @@ class AIState(AnalysisState):
         finally:
             self.is_generating_ai = False
             self.ai_loading_text = ""
-            print("DEBUG: run_ai_analysis FINISHED")
+            logger.debug("run_ai_analysis FINISHED")
             yield
 
     async def generate_ai_analysis(self):
         """Wrapper público para gerar análise de IA"""
-        print("DEBUG: generate_ai_analysis CALLED in AIState")
+        logger.debug("generate_ai_analysis CALLED in AIState")
         async for _ in self.run_ai_analysis():
             yield

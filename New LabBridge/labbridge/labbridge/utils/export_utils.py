@@ -264,7 +264,7 @@ def generate_analysis_detail_excel(analysis: Dict[str, Any], items: List[Dict[st
             if isinstance(item_data, str):
                 try:
                     item_data = json.loads(item_data)
-                except:
+                except (ValueError, KeyError):
                     item_data = {}
             
             ws_items.cell(row=row_num, column=1, value=item.get("item_type", ""))

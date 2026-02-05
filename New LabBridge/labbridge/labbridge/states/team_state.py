@@ -36,6 +36,11 @@ class TeamState(AuthState):
     error_message: str = ""
     success_message: str = ""
 
+    # Remove confirmation
+    show_remove_confirm: bool = False
+    remove_member_id: str = ""
+    remove_member_name: str = ""
+
     # Search
     search_query: str = ""
 
@@ -131,6 +136,16 @@ class TeamState(AuthState):
         """Atualiza papel do convite"""
         self.invite_role = value
 
+    def set_invite_role_label(self, label: str):
+        """Converte label para valor e seta"""
+        label_map = {
+            "Visualizador": "viewer",
+            "Analista": "analyst",
+            "Admin Lab": "admin_lab",
+            "Admin Global": "admin_global",
+        }
+        self.invite_role = label_map.get(label, "viewer")
+
     def set_invite_message(self, value: str):
         """Atualiza mensagem do convite"""
         self.invite_message = value
@@ -223,6 +238,16 @@ class TeamState(AuthState):
         """Atualiza papel na edição"""
         self.edit_member_role = value
 
+    def set_edit_role_label(self, label: str):
+        """Converte label para valor e seta"""
+        label_map = {
+            "Visualizador": "viewer",
+            "Analista": "analyst",
+            "Admin Lab": "admin_lab",
+            "Admin Global": "admin_global",
+        }
+        self.edit_member_role = label_map.get(label, "viewer")
+
     async def save_member_edit(self):
         """Salva alterações do membro"""
         if not self.edit_member_id:
@@ -244,7 +269,8 @@ class TeamState(AuthState):
             if success:
                 self.success_message = "Membro atualizado com sucesso"
                 self.show_edit_modal = False
-                await self.load_team_members()
+                async for _ in self.load_team_members():
+                    yield
             else:
                 self.error_message = error
         except Exception as e:
@@ -273,7 +299,8 @@ class TeamState(AuthState):
             if success:
                 action = "ativado" if new_status == "active" else "desativado"
                 self.success_message = f"Membro {action} com sucesso"
-                await self.load_team_members()
+                async for _ in self.load_team_members():
+                    yield
             else:
                 self.error_message = error
         except Exception as e:
@@ -298,17 +325,37 @@ class TeamState(AuthState):
         finally:
             self.is_saving = False
 
-    async def remove_member(self, member_id: str):
+    def confirm_remove_member(self, member_id: str):
+        """Abre dialogo de confirmacao para remover membro"""
+        member = next((m for m in self.team_members if m["id"] == member_id), None)
+        self.remove_member_id = member_id
+        self.remove_member_name = member.get("name", "") if member else ""
+        self.show_remove_confirm = True
+
+    def cancel_remove_member(self):
+        """Cancela remocao de membro"""
+        self.show_remove_confirm = False
+        self.remove_member_id = ""
+        self.remove_member_name = ""
+
+    async def remove_member(self):
         """Remove membro da equipe"""
+        if not self.remove_member_id:
+            return
+
+        self.show_remove_confirm = False
         self.is_saving = True
         yield
 
         try:
-            success, error = team_service.delete_member(member_id)
+            success, error = team_service.delete_member(self.remove_member_id)
 
             if success:
                 self.success_message = "Membro removido com sucesso"
-                await self.load_team_members()
+                self.remove_member_id = ""
+                self.remove_member_name = ""
+                async for _ in self.load_team_members():
+                    yield
             else:
                 self.error_message = error
         except Exception as e:
@@ -363,16 +410,19 @@ class TeamState(AuthState):
                 return f"Há {days} dias"
             else:
                 return dt.strftime("%d/%m/%Y")
-        except:
+        except (ValueError, TypeError):
             return "-"
 
     @staticmethod
     def get_role_display(role: str) -> str:
         """Retorna nome do papel para exibição"""
         roles = {
+            "owner": "Proprietario",
             "admin_global": "Admin Global",
             "admin_lab": "Admin Lab",
+            "admin": "Administrador",
             "analyst": "Analista",
-            "viewer": "Visualizador"
+            "member": "Membro",
+            "viewer": "Visualizador",
         }
         return roles.get(role, "Visualizador")

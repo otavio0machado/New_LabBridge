@@ -10,60 +10,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any, Optional, Tuple
 
-
-def normalize_patient_name(name: str) -> str:
-    """
-    Normaliza nome do paciente para matching robusto.
-    - Remove acentos
-    - Converte para maiúsculas
-    - Remove espaços extras
-    - Remove caracteres especiais
-    """
-    if not name:
-        return ""
-    # Remove acentos
-    name = unicodedata.normalize('NFKD', str(name)).encode('ASCII', 'ignore').decode('ASCII')
-    # Uppercase
-    name = name.upper()
-    # Remove caracteres não alfanuméricos exceto espaço
-    name = re.sub(r'[^A-Z0-9\s]', '', name)
-    # Remove espaços extras
-    name = ' '.join(name.split())
-    return name.strip()
-
-
-def normalize_exam_name(name: str) -> str:
-    """
-    Normaliza nome do exame para matching.
-    """
-    if not name:
-        return ""
-    name = unicodedata.normalize('NFKD', str(name)).encode('ASCII', 'ignore').decode('ASCII')
-    name = name.upper()
-    name = re.sub(r'[^A-Z0-9\s]', '', name)
-    name = ' '.join(name.split())
-    return name.strip()
-
-
-def safe_decimal(value: Any, default: Decimal = Decimal('0')) -> Decimal:
-    """Converte valor para Decimal de forma segura."""
-    if value is None:
-        return default
-    try:
-        if isinstance(value, Decimal):
-            return value
-        if isinstance(value, str):
-            # Handle Brazilian format (1.234,56)
-            value = value.replace('.', '').replace(',', '.')
-        return Decimal(str(value))
-    except:
-        return default
-
-
-def format_currency_br(value: Decimal) -> str:
-    """Formata valor como moeda brasileira."""
-    val = float(value)
-    return f"R$ {val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+from .normalize import normalize_patient_name, normalize_exam_name, safe_decimal, format_currency_br
 
 
 @dataclass

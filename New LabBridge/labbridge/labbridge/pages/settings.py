@@ -130,7 +130,7 @@ def settings_page() -> rx.Component:
                                         rx.text("Email", size="2", weight="bold"),
                                         rx.input(
                                             placeholder="seu@email.com",
-                                            value=SettingsState.settings_email,
+                                            value=SettingsState.user_email,
                                             width="100%",
                                             size="3",
                                             disabled=True,
@@ -405,13 +405,37 @@ def settings_page() -> rx.Component:
                                                 align_items="start",
                                             ),
                                             rx.spacer(),
-                                            rx.button(
-                                                rx.icon(tag="trash-2", size=14),
-                                                rx.text("Solicitar Exclusao"),
-                                                variant="outline",
-                                                color_scheme="red",
-                                                size="1",
-                                                on_click=SettingsState.request_account_deletion,
+                                            rx.alert_dialog.root(
+                                                rx.alert_dialog.trigger(
+                                                    rx.button(
+                                                        rx.icon(tag="trash-2", size=14),
+                                                        rx.text("Solicitar Exclusao"),
+                                                        variant="outline",
+                                                        color_scheme="red",
+                                                        size="1",
+                                                    ),
+                                                ),
+                                                rx.alert_dialog.content(
+                                                    rx.alert_dialog.title("Excluir Conta"),
+                                                    rx.alert_dialog.description(
+                                                        "ATENCAO: Esta acao e irreversivel. Todos os seus dados serao permanentemente excluidos. Deseja continuar?"
+                                                    ),
+                                                    rx.flex(
+                                                        rx.alert_dialog.cancel(
+                                                            rx.button("Cancelar", variant="soft", color_scheme="gray"),
+                                                        ),
+                                                        rx.alert_dialog.action(
+                                                            rx.button(
+                                                                "Excluir Conta",
+                                                                color_scheme="red",
+                                                                on_click=SettingsState.request_account_deletion,
+                                                            ),
+                                                        ),
+                                                        spacing="3",
+                                                        justify="end",
+                                                        margin_top=Spacing.MD,
+                                                    ),
+                                                ),
                                             ),
                                             width="100%",
                                             padding_y=Spacing.SM,
@@ -439,4 +463,5 @@ def settings_page() -> rx.Component:
             width="100%",
         ),
         width="100%",
+        on_mount=SettingsState.load_settings,
     )

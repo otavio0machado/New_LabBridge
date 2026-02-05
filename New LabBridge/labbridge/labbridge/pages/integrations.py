@@ -245,17 +245,13 @@ def config_modal() -> rx.Component:
                 width="100%",
             ),
             rx.hstack(
-                rx.dialog.close(
-                    ui.button("Cancelar", variant="ghost", on_click=IntegrationState.close_config_modal),
-                ),
-                rx.dialog.close(
-                    ui.button(
-                        "Salvar",
-                        variant="primary",
-                        icon="save",
-                        on_click=IntegrationState.save_config,
-                        loading=IntegrationState.is_loading,
-                    ),
+                ui.button("Cancelar", variant="ghost", on_click=IntegrationState.close_config_modal),
+                ui.button(
+                    "Salvar",
+                    variant="primary",
+                    icon="save",
+                    on_click=IntegrationState.save_config,
+                    loading=IntegrationState.is_loading,
                 ),
                 spacing="2",
                 justify="end",

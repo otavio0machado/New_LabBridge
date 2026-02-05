@@ -1,6 +1,5 @@
 import reflex as rx
 from .auth_state import AuthState
-from .dashboard_state import DashboardState
 
 from .analysis_state import AnalysisState
 from .ai_state import AIState
@@ -15,7 +14,6 @@ from .reports_state import ReportsState
 
 __all__ = [
     "AuthState",
-    "DashboardState",
     "AnalysisState",
     "AIState",
     "TeamState",

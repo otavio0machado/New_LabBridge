@@ -28,12 +28,12 @@ class AuthService:
                         "created_at": ""
                     },
                     "profile": {
-                        "tenant_id": "local",
+                        "tenant_id": "dev-tenant",
                         "role": "admin"
                     },
                     "tenant": {
-                        "id": "local",
-                        "name": "LabBridge Local",
+                        "id": "dev-tenant",
+                        "name": "LabBridge Dev",
                         "plan_type": "enterprise",
                         "subscription_status": "active"
                     },
@@ -164,23 +164,6 @@ class AuthService:
             print(f"Erro no logout: {e}")
             return True  # Considera sucesso mesmo com erro
 
-    def get_current_user(self) -> Optional[Dict[str, Any]]:
-        """Retorna usuario atual da sessao"""
-        if not self.client:
-            return None
-
-        try:
-            user = self.client.auth.get_user()
-            if user and user.user:
-                return {
-                    "id": user.user.id,
-                    "email": user.user.email
-                }
-        except:
-            pass
-
-        return None
-
     def refresh_session(self) -> bool:
         """Atualiza a sessao do usuario"""
         if not self.client:
@@ -189,7 +172,7 @@ class AuthService:
         try:
             response = self.client.auth.refresh_session()
             return response.session is not None
-        except:
+        except Exception:
             return False
 
     def _load_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
@@ -292,8 +275,8 @@ class AuthService:
         if not self.client:
             return False, "Cliente Supabase nao configurado"
 
-        if not new_password or len(new_password) < 6:
-            return False, "Senha deve ter pelo menos 6 caracteres"
+        if not new_password or len(new_password) < 8:
+            return False, "Senha deve ter pelo menos 8 caracteres"
 
         try:
             self.client.auth.update_user({"password": new_password})
@@ -302,6 +285,43 @@ class AuthService:
             error_msg = str(e)
             if "weak" in error_msg.lower():
                 return False, "Senha muito fraca. Use uma senha mais forte."
+            return False, f"Erro ao atualizar senha: {error_msg}"
+
+    def verify_and_change_password(self, email: str, current_password: str, new_password: str) -> Tuple[bool, str]:
+        """
+        Verifica a senha atual re-autenticando e depois atualiza para a nova senha.
+
+        Returns:
+            Tuple[success, message]
+        """
+        if not self.client:
+            return False, "Cliente Supabase nao configurado"
+
+        if not new_password or len(new_password) < 8:
+            return False, "Nova senha deve ter pelo menos 8 caracteres"
+
+        try:
+            # 1. Verificar senha atual re-autenticando
+            self.client.auth.sign_in_with_password({
+                "email": email,
+                "password": current_password
+            })
+        except Exception as e:
+            error_msg = str(e)
+            if "Invalid login credentials" in error_msg:
+                return False, "Senha atual incorreta"
+            return False, f"Erro ao verificar senha atual: {error_msg}"
+
+        try:
+            # 2. Atualizar para nova senha
+            self.client.auth.update_user({"password": new_password})
+            return True, "Senha alterada com sucesso!"
+        except Exception as e:
+            error_msg = str(e)
+            if "weak" in error_msg.lower():
+                return False, "Nova senha muito fraca. Use uma senha mais forte."
+            if "same" in error_msg.lower():
+                return False, "A nova senha deve ser diferente da atual."
             return False, f"Erro ao atualizar senha: {error_msg}"
 
     # =========================================================================
@@ -390,7 +410,7 @@ class AuthService:
             
         # Se não existe, criar perfil e tenant para usuário OAuth
         if not self.client:
-            return {"tenant_id": "local", "role": "admin"}
+            return {"tenant_id": "dev-tenant", "role": "admin"}
             
         try:
             email = user.get("email", "")
@@ -427,7 +447,7 @@ class AuthService:
         except Exception as e:
             print(f"Erro ao criar perfil OAuth: {e}")
             
-        return {"tenant_id": "local", "role": "member"}
+        return {"tenant_id": "dev-tenant", "role": "member"}
 
 
 # Singleton

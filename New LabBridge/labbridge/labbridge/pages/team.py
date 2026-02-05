@@ -8,23 +8,40 @@ from ..styles import Color, Design, Spacing, TextSize
 from ..components import ui
 
 
-def role_badge(role: str) -> rx.Component:
-    """Badge de função do usuário"""
-    role_config = {
-        "admin_global": (Color.ERROR, Color.ERROR_BG, "shield"),
-        "admin_lab": (Color.PRIMARY, Color.PRIMARY_LIGHT, "shield-check"),
-        "analyst": (Color.SUCCESS, Color.SUCCESS_BG, "user-check"),
-        "viewer": (Color.TEXT_SECONDARY, Color.BACKGROUND, "eye"),
-    }
-    color, bg, icon = role_config.get(role, role_config["viewer"])
-
-    role_names = {
-        "admin_global": "Admin Global",
-        "admin_lab": "Admin Lab",
-        "analyst": "Analista",
-        "viewer": "Visualizador"
-    }
-    display_name = role_names.get(role, "Visualizador")
+def role_badge(role) -> rx.Component:
+    """Badge de função do usuário (rx.Var-safe com rx.match)"""
+    color = rx.match(
+        role,
+        ("admin_global", Color.ERROR),
+        ("admin_lab", Color.PRIMARY),
+        ("analyst", Color.SUCCESS),
+        ("viewer", Color.TEXT_SECONDARY),
+        Color.TEXT_SECONDARY,
+    )
+    bg = rx.match(
+        role,
+        ("admin_global", Color.ERROR_BG),
+        ("admin_lab", Color.PRIMARY_LIGHT),
+        ("analyst", Color.SUCCESS_BG),
+        ("viewer", Color.BACKGROUND),
+        Color.BACKGROUND,
+    )
+    icon = rx.match(
+        role,
+        ("admin_global", "shield"),
+        ("admin_lab", "shield-check"),
+        ("analyst", "user-check"),
+        ("viewer", "eye"),
+        "eye",
+    )
+    display_name = rx.match(
+        role,
+        ("admin_global", "Admin Global"),
+        ("admin_lab", "Admin Lab"),
+        ("analyst", "Analista"),
+        ("viewer", "Visualizador"),
+        "Visualizador",
+    )
 
     return rx.hstack(
         rx.icon(tag=icon, size=12, color=color),
@@ -132,18 +149,18 @@ def user_row(member: dict) -> rx.Component:
                 rx.menu.content(
                     rx.menu.item(
                         rx.hstack(rx.icon(tag="pencil", size=14), rx.text("Editar")),
-                        on_select=lambda: TeamState.open_edit_modal(member_id),
+                        on_select=TeamState.open_edit_modal(member_id),
                     ),
                     rx.menu.item(
                         rx.hstack(rx.icon(tag="key", size=14), rx.text("Alterar Permissões")),
-                        on_select=lambda: TeamState.open_edit_modal(member_id),
+                        on_select=TeamState.open_edit_modal(member_id),
                     ),
                     rx.menu.separator(),
                     rx.cond(
                         status == "pending",
                         rx.menu.item(
                             rx.hstack(rx.icon(tag="mail", size=14), rx.text("Reenviar Convite")),
-                            on_select=lambda: TeamState.resend_member_invite(member_id),
+                            on_select=TeamState.resend_member_invite(member_id),
                         ),
                         rx.fragment(),
                     ),
@@ -152,14 +169,14 @@ def user_row(member: dict) -> rx.Component:
                         rx.menu.item(
                             rx.hstack(rx.icon(tag="user-x", size=14), rx.text("Desativar")),
                             color="red",
-                            on_select=lambda: TeamState.toggle_member_status(member_id),
+                            on_select=TeamState.toggle_member_status(member_id),
                         ),
                         rx.cond(
                             status == "inactive",
                             rx.menu.item(
                                 rx.hstack(rx.icon(tag="user-check", size=14), rx.text("Ativar")),
                                 color="green",
-                                on_select=lambda: TeamState.toggle_member_status(member_id),
+                                on_select=TeamState.toggle_member_status(member_id),
                             ),
                             rx.fragment(),
                         ),
@@ -168,7 +185,7 @@ def user_row(member: dict) -> rx.Component:
                     rx.menu.item(
                         rx.hstack(rx.icon(tag="trash-2", size=14), rx.text("Remover")),
                         color="red",
-                        on_select=lambda: TeamState.remove_member(member_id),
+                        on_select=TeamState.confirm_remove_member(member_id),
                     ),
                 ),
             ),
@@ -270,10 +287,17 @@ def invite_modal() -> rx.Component:
                 rx.vstack(
                     rx.text("Função", font_weight="500", font_size=TextSize.SMALL),
                     rx.select(
-                        ["viewer", "analyst", "admin_lab", "admin_global"],
-                        default_value="viewer",
-                        value=TeamState.invite_role,
-                        on_change=TeamState.set_invite_role,
+                        ["Visualizador", "Analista", "Admin Lab", "Admin Global"],
+                        default_value="Visualizador",
+                        value=rx.match(
+                            TeamState.invite_role,
+                            ("viewer", "Visualizador"),
+                            ("analyst", "Analista"),
+                            ("admin_lab", "Admin Lab"),
+                            ("admin_global", "Admin Global"),
+                            "Visualizador",
+                        ),
+                        on_change=TeamState.set_invite_role_label,
                         width="100%",
                     ),
                     spacing="1",
@@ -359,9 +383,16 @@ def edit_modal() -> rx.Component:
                 rx.vstack(
                     rx.text("Função", font_weight="500", font_size=TextSize.SMALL),
                     rx.select(
-                        ["viewer", "analyst", "admin_lab", "admin_global"],
-                        value=TeamState.edit_member_role,
-                        on_change=TeamState.set_edit_role,
+                        ["Visualizador", "Analista", "Admin Lab", "Admin Global"],
+                        value=rx.match(
+                            TeamState.edit_member_role,
+                            ("viewer", "Visualizador"),
+                            ("analyst", "Analista"),
+                            ("admin_lab", "Admin Lab"),
+                            ("admin_global", "Admin Global"),
+                            "Visualizador",
+                        ),
+                        on_change=TeamState.set_edit_role_label,
                         width="100%",
                     ),
                     spacing="1",
@@ -613,6 +644,28 @@ def team_page() -> rx.Component:
                 columns=rx.breakpoints(initial="1", lg="2"),
                 spacing="4",
                 width="100%",
+            ),
+
+            # Remove Confirmation Dialog
+            rx.alert_dialog.root(
+                rx.alert_dialog.content(
+                    rx.alert_dialog.title("Remover Membro"),
+                    rx.alert_dialog.description(
+                        rx.text("Tem certeza que deseja remover ", rx.text(TeamState.remove_member_name, font_weight="bold"), "? Esta acao nao pode ser desfeita."),
+                    ),
+                    rx.flex(
+                        rx.alert_dialog.cancel(
+                            rx.button("Cancelar", variant="soft", color_scheme="gray", on_click=TeamState.cancel_remove_member),
+                        ),
+                        rx.alert_dialog.action(
+                            rx.button("Remover", color_scheme="red", on_click=TeamState.remove_member),
+                        ),
+                        spacing="3",
+                        justify="end",
+                        margin_top=Spacing.MD,
+                    ),
+                ),
+                open=TeamState.show_remove_confirm,
             ),
 
             # Edit Modal

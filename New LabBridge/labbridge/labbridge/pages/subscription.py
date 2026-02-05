@@ -417,4 +417,5 @@ def subscription_page() -> rx.Component:
             width="100%",
         ),
         width="100%",
+        on_mount=SubscriptionState.load_subscription,
     )

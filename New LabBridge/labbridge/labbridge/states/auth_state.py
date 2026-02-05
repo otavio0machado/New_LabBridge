@@ -165,10 +165,10 @@ class AuthState(rx.State):
                         created_at=str(tenant_data.get("created_at", ""))
                     )
                 else:
-                    # Tenant padrao para usuarios sem tenant (nao deveria acontecer)
+                    # Sem tenant - usar dados minimos do login local/dev
                     self.current_tenant = Tenant(
-                        id="default",
-                        name="LabBridge Demo",
+                        id=self.current_user.tenant_id or "dev-tenant",
+                        name="LabBridge",
                         plan_type="starter",
                         subscription_status="active"
                     )
@@ -328,8 +328,8 @@ class AuthState(rx.State):
 
     @rx.var
     def is_viewer(self) -> bool:
-        """Verifica se usuario e viewer ou superior (todos)"""
-        return bool(self.user_role)
+        """Verifica se usuario e viewer ou superior (todos autenticados)"""
+        return self.is_authenticated
 
     @rx.var
     def can_create_analysis(self) -> bool:
@@ -425,29 +425,48 @@ class AuthState(rx.State):
     async def handle_oauth_callback(self):
         """Processa callback do OAuth após autenticação"""
         from ..services.auth_service import auth_service
-        
+
         try:
             # Verificar se há sessão válida
             user = auth_service.get_current_user()
-            
+
             if user:
                 # Buscar ou criar perfil
                 profile = auth_service.get_or_create_profile(user)
-                
+
+                tenant_id = profile.get("tenant_id", "") if profile else ""
+
                 self.current_user = User(
                     id=user.get("id", ""),
                     email=user.get("email", ""),
                     full_name=profile.get("full_name", "") if profile else "",
-                    tenant_id=profile.get("tenant_id", "") if profile else "",
+                    tenant_id=tenant_id,
                     role=profile.get("role", "member") if profile else "member",
                     created_at=user.get("created_at", "")
                 )
+
+                # Carregar tenant para o contexto
+                if tenant_id:
+                    tenant_data = auth_service._load_tenant(tenant_id)
+                    if tenant_data:
+                        self.current_tenant = Tenant(
+                            id=tenant_data.get("id", ""),
+                            name=tenant_data.get("name", ""),
+                            cnpj=tenant_data.get("cnpj"),
+                            email=tenant_data.get("email"),
+                            phone=tenant_data.get("phone"),
+                            plan_type=tenant_data.get("plan_type", "starter"),
+                            subscription_status=tenant_data.get("subscription_status", "active"),
+                            stripe_customer_id=tenant_data.get("stripe_customer_id"),
+                            settings=tenant_data.get("settings", {}),
+                            created_at=str(tenant_data.get("created_at", ""))
+                        )
 
                 self.is_authenticated = True
                 return rx.redirect("/")
             else:
                 return rx.redirect("/login")
-                
+
         except Exception as e:
             print(f"Erro no callback OAuth: {e}")
             return rx.redirect("/login")

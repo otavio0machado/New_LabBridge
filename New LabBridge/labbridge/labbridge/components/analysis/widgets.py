@@ -2,7 +2,7 @@ import reflex as rx
 from typing import Any
 from ...state import State
 from ...components import ui
-from ...styles import Color, Design, Spacing, Typography, GLASS_STYLE, CARD_STYLE
+from ...styles import Color, Design, Spacing, Typography, CARD_STYLE
 
 # === ANALYSIS PAGE COMPONENTS (REMASTERED PREMIUM) ===
 

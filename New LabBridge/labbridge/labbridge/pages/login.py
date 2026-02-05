@@ -21,11 +21,7 @@ def oauth_buttons() -> rx.Component:
         # Botão Google
         rx.button(
             rx.hstack(
-                rx.image(
-                    src="https://www.google.com/favicon.ico",
-                    width="18px",
-                    height="18px",
-                ),
+                rx.icon(tag="chrome", size=18),
                 rx.text("Continuar com Google"),
                 spacing="3",
                 align="center",
@@ -42,11 +38,7 @@ def oauth_buttons() -> rx.Component:
         # Botão Microsoft
         rx.button(
             rx.hstack(
-                rx.image(
-                    src="https://www.microsoft.com/favicon.ico",
-                    width="18px",
-                    height="18px",
-                ),
+                rx.icon(tag="monitor", size=18),
                 rx.text("Continuar com Microsoft"),
                 spacing="3",
                 align="center",

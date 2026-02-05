@@ -9,11 +9,9 @@ Seguindo SKILL "O Oráculo" - Integração AI e Prompts
 """
 
 from typing import Optional
-from dataclasses import dataclass
 import math
 
 
-@dataclass
 # WestgardResult removido.
 
 

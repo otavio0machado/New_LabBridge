@@ -4,55 +4,15 @@ Laboratório Biodiagnóstico
 FORENSIC AUDIT ENGINE v3.0 - Structured Report Generation
 """
 from datetime import datetime
-import openai
 import csv
 import io
 import asyncio
 import math
 import re
 from typing import Optional, Tuple, Dict, List, Any, Callable
-import google.genai as genai
-from google.genai import types
 import json
 from ..services.mapping_service import mapping_service
-
-
-def normalize_patient_name(name: str) -> str:
-    """Normaliza nome do paciente para matching"""
-    import unicodedata
-    if not name:
-        return ""
-    # Remove acentos
-    name = unicodedata.normalize('NFKD', name).encode('ASCII', 'ignore').decode('ASCII')
-    # Uppercase e remove espaços extras
-    name = ' '.join(name.upper().strip().split())
-    return name
-
-
-def calculate_local_totals(patients_dict: dict) -> Tuple[float, int, int]:
-    """Calcula totais localmente para validação"""
-    total_value = 0.0
-    total_exams = 0
-    total_patients = len(patients_dict)
-    
-    for patient, patient_data in patients_dict.items():
-        if isinstance(patient_data, dict) and 'exams' in patient_data:
-            exams = patient_data['exams']
-        elif isinstance(patient_data, list):
-            exams = patient_data
-        else:
-            exams = []
-        
-        for exam in exams:
-            try:
-                val = float(exam.get('value', 0) or 0)
-                total_value += val
-                total_exams += 1
-            except (ValueError, TypeError):
-                pass
-    
-    return total_value, total_exams, total_patients
-
+from .normalize import normalize_patient_name, format_currency_br
 
 
 def identify_discrepancies_locally(compulab_patients: dict, simus_patients: dict) -> Dict[str, Any]:
@@ -156,7 +116,7 @@ def pre_filter_data(compulab_patients: dict, simus_patients: dict) -> Tuple[Dict
             norm_name = str(s_ex.get('exam_name', '')).upper().strip()
             code = str(s_ex.get('code', '')).strip()
             try: val = float(s_ex.get('value', 0))
-            except: val = 0.0
+            except (ValueError, TypeError): val = 0.0
             s_map.append({'obj': s_ex, 'name': norm_name, 'code': code, 'val': val, 'matched': False})
             
         unmatched_c_exams = []
@@ -165,7 +125,7 @@ def pre_filter_data(compulab_patients: dict, simus_patients: dict) -> Tuple[Dict
             c_name = str(c_ex.get('exam_name', '')).upper().strip()
             c_code = str(c_ex.get('code', '')).strip()
             try: c_val = float(c_ex.get('value', 0))
-            except: c_val = 0.0
+            except (ValueError, TypeError): c_val = 0.0
             
             match_found = False
             # Tentativa 1: Match Exato (Nome/Código + Valor exato)
@@ -212,13 +172,6 @@ def pre_filter_data(compulab_patients: dict, simus_patients: dict) -> Tuple[Dict
     return filtered_compulab, filtered_simus, skipped_csv_rows
 
 
-def chunk_data(data_dict, chunk_size=50):
-    """Agrupa dados em chunks de N pacientes"""
-    items = list(data_dict.items())
-    for i in range(0, len(items), chunk_size):
-        yield dict(items[i:i + chunk_size])
-
-
 def format_dataset_for_prompt(patients_dict):
     """Formata dataset para o prompt (CSV style)"""
     output = "Paciente,Nome_Exame,Codigo_Exame,Valor\n"
@@ -239,20 +192,16 @@ def format_dataset_for_prompt(patients_dict):
             try:
                 val = float(exam.get('value', 0))
                 val_str = f"{val:.2f}".replace('.', ',')
-            except:
+            except (ValueError, TypeError):
                 val_str = "0,00"
             
             output += f"{patient.upper()},{exam_name},{exam_code},{val_str}\n"
     return output
 
 
-def format_currency_br(value: float) -> str:
-    """Formata valor como moeda brasileira"""
-    return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-
 async def process_batch(client, system_prompt, chunk_patients, compulab_patients, simus_patients, batch_id, total_batches, progress_callback=None, retries=3, model_name="gpt-4o"):
     """Processa um único batch (async) com retry e backoff exponencial"""
+    import openai  # lazy import
     for attempt in range(retries + 1):
         try:
             # Filtrar dados para este chunk
@@ -351,6 +300,8 @@ Analyze this batch now and output ONLY the CSV lines."""
 
 async def process_batch_gemini(api_key, system_prompt, chunk_patients, compulab_patients, simus_patients, batch_id, total_batches, progress_callback=None, retries=3, model_name="gemini-2.0-flash"):
     """Processa um único batch usando Google Gemini (async)"""
+    import google.genai as genai  # lazy import
+    from google.genai import types  # lazy import
     for attempt in range(retries + 1):
         try:
             # Configurar Gemini client
@@ -428,12 +379,10 @@ Analyze this batch now and output ONLY the CSV lines."""
                     rows.append(line)
                     
             return rows, None
-            
-            return rows, None
-            
+
         except Exception as e:
             error_msg = str(e)
-            
+
             # Detectar 429 / Resource Exhausted
             is_rate_limit = "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "quota" in error_msg.lower()
             
@@ -494,8 +443,6 @@ async def generate_ai_analysis(
         gap_financeiro = compulab_total - simus_total
         
         yield 5, f"Gap identificado: {format_currency_br(gap_financeiro)}"
-        
-        yield 5, f"Gap identificado: {format_currency_br(gap_financeiro)}"
 
         # ===== FASE 1.5: FILTRAGEM LOCAL (THE SIEVE) =====
         yield 6, "Executando pré-filtragem inteligente..."
@@ -518,6 +465,7 @@ async def generate_ai_analysis(
 
         client = None
         if provider == "OpenAI":
+            import openai  # lazy import
             client = openai.AsyncOpenAI(api_key=api_key)
         # Gemini doesn't need a client object in the same way for the batch processor as it configures globally or per-call
         
@@ -660,7 +608,7 @@ Example:
              
         try:
              all_csv_rows.sort(key=lambda x: x.split(';')[0] if ';' in x else x)
-        except:
+        except (TypeError, ValueError):
              pass
 
         # ===== FASE 3: GERAR RELATÓRIO ESTRUTURADO =====
@@ -793,7 +741,4 @@ Com base nos dados analisados, a diferença de **{format_currency_br(gap_finance
         yield "", f"Erro na Auditoria IA: {str(e)}"
 
 
-def format_ai_report(ai_analysis: str) -> str:
-    """Wrapper para formatação do relatório de IA (Atualmente retorna string pura)"""
-    return ai_analysis
 

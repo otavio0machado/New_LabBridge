@@ -3,9 +3,12 @@ Servico de Mapeamento de Exames
 Laboratorio Biodiagnostico
 """
 import json
+import logging
 import os
 from typing import Dict
 from .supabase_client import supabase
+
+logger = logging.getLogger(__name__)
 
 
 class MappingService:
@@ -71,11 +74,11 @@ class MappingService:
                         if item.get("original_name") and item.get("canonical_name")
                     }
                     loaded = True
-                    print(f"DEBUG: MappingService carregou {len(cls._cache)} mapeamentos.")
+                    logger.debug(f"MappingService carregou {len(cls._cache)} mapeamentos.")
             except Exception as e:
                 msg = str(e)
                 if "exam_mappings" in msg:
-                    print("DEBUG: Tabela exam_mappings indisponivel no Supabase. Usando fallback local.")
+                    logger.debug("Tabela exam_mappings indisponivel no Supabase. Usando fallback local.")
                 else:
                     print(f"Erro ao carregar mapeamentos de exames: {e}")
 
@@ -84,9 +87,9 @@ class MappingService:
             cls._cache = local
             loaded = True
             if local:
-                print(f"DEBUG: MappingService carregou {len(cls._cache)} mapeamentos locais.")
+                logger.debug(f"MappingService carregou {len(cls._cache)} mapeamentos locais.")
             else:
-                print("DEBUG: MappingService sem mapeamentos (local e remoto vazios).")
+                logger.debug("MappingService sem mapeamentos (local e remoto vazios).")
 
         cls._is_loaded = loaded
 
@@ -119,14 +122,14 @@ class MappingService:
             except Exception as e:
                 msg = str(e)
                 if "exam_mappings" in msg:
-                    print("DEBUG: Supabase sem exam_mappings. Salvando mapeamento localmente.")
+                    logger.debug("Supabase sem exam_mappings. Salvando mapeamento localmente.")
                 else:
                     print(f"Erro ao adicionar mapeamento: {e}")
 
         cls._cache[data["original_name"]] = data["canonical_name"]
         cls._save_local_mappings(cls._cache)
         if not success:
-            print("DEBUG: Mapeamento salvo localmente (fallback).")
+            logger.debug("Mapeamento salvo localmente (fallback).")
 
     @classmethod
     def get_all_synonyms(cls) -> Dict[str, str]:

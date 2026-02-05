@@ -201,14 +201,38 @@ def saved_analysis_card(analysis: dict) -> rx.Component:
                     title="Ver detalhes",
                     on_click=AnalysisState.open_saved_analysis(analysis["id"]),
                 ),
-                rx.button(
-                    rx.icon(tag="trash-2", size=16),
-                    variant="ghost",
-                    size="1",
-                    cursor="pointer",
-                    color=Color.ERROR,
-                    title="Excluir",
-                    on_click=AnalysisState.delete_saved_analysis(analysis["id"]),
+                rx.alert_dialog.root(
+                    rx.alert_dialog.trigger(
+                        rx.button(
+                            rx.icon(tag="trash-2", size=16),
+                            variant="ghost",
+                            size="1",
+                            cursor="pointer",
+                            color=Color.ERROR,
+                            title="Excluir",
+                        ),
+                    ),
+                    rx.alert_dialog.content(
+                        rx.alert_dialog.title("Excluir Analise"),
+                        rx.alert_dialog.description(
+                            "Tem certeza que deseja excluir esta analise? Esta acao nao pode ser desfeita."
+                        ),
+                        rx.flex(
+                            rx.alert_dialog.cancel(
+                                rx.button("Cancelar", variant="soft", color_scheme="gray"),
+                            ),
+                            rx.alert_dialog.action(
+                                rx.button(
+                                    "Excluir",
+                                    color_scheme="red",
+                                    on_click=AnalysisState.delete_saved_analysis(analysis["id"]),
+                                ),
+                            ),
+                            spacing="3",
+                            justify="end",
+                            margin_top=Spacing.MD,
+                        ),
+                    ),
                 ),
                 spacing="1",
             ),

@@ -22,7 +22,7 @@ def format_currency(value):
     return str(value)
 
 
-def generate_analysis_pdf(
+def generate_simple_pdf_report(
     compulab_total: float,
     simus_total: float,
     compulab_count: int,

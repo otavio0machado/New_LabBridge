@@ -139,15 +139,9 @@ def update_synonyms(base: Dict[str, str], updates: Dict[str, str]) -> Dict[str, 
 
 
 def normalize_patient_name(name: str) -> str:
-    """
-    Normaliza nome do paciente para comparacao robusta.
-    """
-    if not name:
-        return ""
-    text = unidecode(str(name)).upper()
-    text = re.sub(r"[^A-Z0-9\s]", " ", text)
-    text = " ".join(text.split())
-    return text.strip()
+    """Normaliza nome do paciente para comparacao robusta."""
+    from .normalize import normalize_patient_name as _npn
+    return _npn(name)
 
 
 def normalize_exam_name(name: str) -> str:

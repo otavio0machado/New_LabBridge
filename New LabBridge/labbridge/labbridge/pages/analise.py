@@ -3,7 +3,6 @@ Análise COMPULAB x SIMUS page
 Design moderno com upload aprimorado e visualização de dados premium
 """
 import reflex as rx
-from typing import Any
 from ..state import State
 from ..components.file_upload import compact_upload_card, upload_progress_indicator
 from ..components.save_analysis_modal import save_analysis_modal, saved_analyses_list
@@ -106,7 +105,7 @@ def analise_page() -> rx.Component:
                                     rx.spinner(size="2", color=Color.PRIMARY),
                                     rx.text(State.analysis_stage, font_weight="600", color=Color.DEEP),
                                     rx.spacer(),
-                                    rx.text(f"{State.analysis_progress_percentage}%", font_weight="700", color=Color.PRIMARY),
+                                    rx.text(State.analysis_progress_percentage.to(str) + "%", font_weight="700", color=Color.PRIMARY),
                                     width="100%",
                                     align_items="center",
                                 ),
@@ -115,7 +114,7 @@ def analise_page() -> rx.Component:
                                         bg=Color.GRADIENT_PRIMARY,
                                         border_radius="full",
                                         transition="width 0.3s ease",
-                                        width=rx.cond(State.analysis_progress_percentage > 0, f"{State.analysis_progress_percentage}%", "0%"),
+                                        width=rx.cond(State.analysis_progress_percentage > 0, State.analysis_progress_percentage.to(str) + "%", "0%"),
                                         height="100%",
                                         position="relative",
                                         overflow="hidden",

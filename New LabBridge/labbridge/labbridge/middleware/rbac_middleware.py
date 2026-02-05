@@ -2,9 +2,12 @@
 RBAC Middleware - Role-Based Access Control
 Controle de acesso baseado em roles para LabBridge
 """
+import logging
 from typing import List, Dict, Callable, Any, Optional
 from functools import wraps
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class RBACMiddleware:
@@ -238,8 +241,7 @@ def log_access_attempt(user_id: str, action: str, granted: bool, role: str = "")
     timestamp = datetime.now().isoformat()
     status = "GRANTED" if granted else "DENIED"
 
-    # Log simples (pode ser expandido para salvar no banco)
-    print(f"[RBAC] {timestamp} | {status} | user={user_id} | role={role} | action={action}")
+    logger.info(f"[RBAC] {timestamp} | {status} | user={user_id} | role={role} | action={action}")
 
 
 # Constantes para uso nos templates

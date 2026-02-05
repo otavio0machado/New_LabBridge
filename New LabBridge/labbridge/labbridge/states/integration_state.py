@@ -5,9 +5,10 @@ import reflex as rx
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from ..services.integration_service import integration_service
+from .auth_state import AuthState
 
 
-class IntegrationState(rx.State):
+class IntegrationState(AuthState):
     """Estado para página de Integrações"""
 
     # Lista de integrações
@@ -96,7 +97,11 @@ class IntegrationState(rx.State):
         yield
 
         try:
-            tenant_id = "local"
+            tenant_id = self.current_user.tenant_id if self.current_user else None
+            if not tenant_id:
+                self.error_message = "Usuário não autenticado"
+                self.is_loading = False
+                return
 
             success, integrations, error = integration_service.get_integrations(tenant_id)
 
@@ -165,7 +170,7 @@ class IntegrationState(rx.State):
         yield
 
         try:
-            tenant_id = "local"
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
             success_count, error_count = integration_service.sync_all(tenant_id)
 
             if error_count == 0:
@@ -305,7 +310,7 @@ class IntegrationState(rx.State):
         yield
 
         try:
-            tenant_id = "local"
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
 
             success, integration, error = integration_service.create_integration({
                 "name": catalog_item["name"],
@@ -363,7 +368,7 @@ class IntegrationState(rx.State):
     def format_last_sync(last_sync: Optional[str]) -> str:
         """Formata última sincronização para exibição"""
         if not last_sync:
-            return None
+            return "Nunca sincronizado"
 
         try:
             dt = datetime.fromisoformat(last_sync.replace("Z", "+00:00"))
@@ -380,8 +385,8 @@ class IntegrationState(rx.State):
                 return f"Há {hours} hora{'s' if hours > 1 else ''}"
             else:
                 return dt.strftime("%d/%m às %H:%M")
-        except:
-            return None
+        except (ValueError, TypeError):
+            return "Data invalida"
 
     @staticmethod
     def get_category_display(category: str) -> str:

@@ -51,8 +51,9 @@ class TeamService:
             try:
                 members = self.local.get_team_members(tenant_id)
                 return True, members, ""
-            except:
-                return self._get_mock_members()
+            except Exception as e2:
+                print(f"Erro no fallback local: {e2}")
+                return False, [], f"Erro ao buscar membros: {str(e)}"
 
     def get_member_by_id(self, member_id: str) -> Tuple[bool, Optional[Dict[str, Any]], str]:
         """Busca um membro específico"""
@@ -240,7 +241,8 @@ class TeamService:
                 .execute()
 
             return response.data or []
-        except:
+        except Exception as e:
+            print(f"Erro ao buscar convites: {e}")
             return []
 
     def accept_invite(self, token: str, user_name: str = "") -> Tuple[bool, str]:
@@ -327,87 +329,6 @@ class TeamService:
         }
         return stats
 
-    # =========================================================================
-    # MOCK DATA (fallback quando Supabase não está configurado)
-    # =========================================================================
-
-    def _get_mock_members(self) -> Tuple[bool, List[Dict[str, Any]], str]:
-        """Retorna dados mock para desenvolvimento"""
-        mock_members = [
-            {
-                "id": "1",
-                "email": "admin@labbridge.com",
-                "name": "Admin Principal",
-                "role": "admin_global",
-                "status": "active",
-                "last_active": datetime.utcnow().isoformat(),
-                "created_at": "2024-01-01T00:00:00"
-            },
-            {
-                "id": "2",
-                "email": "joao@laboratorio.com",
-                "name": "Dr. João Silva",
-                "role": "admin_lab",
-                "status": "active",
-                "last_active": (datetime.utcnow() - timedelta(minutes=5)).isoformat(),
-                "created_at": "2024-01-15T00:00:00"
-            },
-            {
-                "id": "3",
-                "email": "ana@laboratorio.com",
-                "name": "Ana Costa",
-                "role": "analyst",
-                "status": "active",
-                "last_active": (datetime.utcnow() - timedelta(hours=1)).isoformat(),
-                "created_at": "2024-02-01T00:00:00"
-            },
-            {
-                "id": "4",
-                "email": "carlos@laboratorio.com",
-                "name": "Carlos Souza",
-                "role": "analyst",
-                "status": "active",
-                "last_active": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
-                "created_at": "2024-02-15T00:00:00"
-            },
-            {
-                "id": "5",
-                "email": "maria@laboratorio.com",
-                "name": "Maria Santos",
-                "role": "viewer",
-                "status": "active",
-                "last_active": (datetime.utcnow() - timedelta(days=1)).isoformat(),
-                "created_at": "2024-03-01T00:00:00"
-            },
-            {
-                "id": "6",
-                "email": "pedro@laboratorio.com",
-                "name": "Pedro Lima",
-                "role": "viewer",
-                "status": "active",
-                "last_active": (datetime.utcnow() - timedelta(days=3)).isoformat(),
-                "created_at": "2024-03-15T00:00:00"
-            },
-            {
-                "id": "7",
-                "email": "julia@laboratorio.com",
-                "name": "Julia Oliveira",
-                "role": "analyst",
-                "status": "pending",
-                "last_active": None,
-                "created_at": "2024-04-01T00:00:00"
-            },
-            {
-                "id": "8",
-                "email": "lucas@laboratorio.com",
-                "name": "Lucas Mendes",
-                "role": "viewer",
-                "status": "pending",
-                "last_active": None,
-                "created_at": "2024-04-05T00:00:00"
-            },
-        ]
-        return True, mock_members, ""
 
 
 # Singleton

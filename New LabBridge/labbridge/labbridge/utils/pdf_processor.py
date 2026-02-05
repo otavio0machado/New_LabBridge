@@ -7,6 +7,7 @@ Otimizado para arquivos grandes (12MB+):
 - Extração seletiva de tabelas
 - Limite de páginas por iteração
 """
+import logging
 import pdfplumber
 from decimal import Decimal
 import re
@@ -18,6 +19,8 @@ import gc
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from typing import Optional, Tuple, Dict, List, Any, Callable
 from ..services.mapping_service import mapping_service
+
+logger = logging.getLogger(__name__)
 
 # Configurações para arquivos grandes
 MAX_PAGES_PER_BATCH = 20  # Processar páginas em lotes
@@ -36,7 +39,7 @@ def parse_currency_value(value_str):
     value_str = value_str.replace('.', '').replace(',', '.')
     try:
         return Decimal(value_str)
-    except:
+    except (ValueError, ArithmeticError):
         return None
 
 
@@ -420,7 +423,7 @@ class SimusPDFParser:
                 
                 # Se recuperamos menos de 10% do valor esperado ou nenhum paciente, tentar fallback
                 if not table_success or (len(self.extracted_patients) == 0):
-                    print("DEBUG: Estratégia de tabela falhou ou insuficiente. Tentando análise textual...")
+                    logger.debug("Estrategia de tabela falhou ou insuficiente. Tentando analise textual...")
                     # Limpar parcial
                     self.extracted_patients.clear()
                     self._strategy_text_analysis(pdf, total_pages, progress_callback)
@@ -540,7 +543,7 @@ class SimusPDFParser:
             try:
                 val_str = str(row[cols['valor']])
                 val = parse_currency_value(val_str)
-            except:
+            except (ValueError, TypeError, KeyError):
                 val = Decimal('0')
                 
             if val and val > 0:
@@ -770,12 +773,12 @@ def generate_excel_from_pdfs(compulab_pdf_bytes, simus_pdf_bytes, progress_callb
         if tmp_compulab_path and os.path.exists(tmp_compulab_path):
             try:
                 os.unlink(tmp_compulab_path)
-            except:
+            except OSError:
                 pass
         if tmp_simus_path and os.path.exists(tmp_simus_path):
             try:
                 os.unlink(tmp_simus_path)
-            except:
+            except OSError:
                 pass
 
 
@@ -880,7 +883,7 @@ def load_from_excel(file_path):
                 val_raw = str(row[col_map['value']]).replace(',', '.')
                 val_clean = "".join(c for c in val_raw if c.isdigit() or c == '.')
                 value = Decimal(val_clean) if val_clean else Decimal('0')
-            except:
+            except (ValueError, TypeError, ArithmeticError, KeyError):
                 value = Decimal('0')
             
             if not patient_name or patient_name.upper() in ['TOTAL', 'PACIENTE', 'NOME'] or value == 0:

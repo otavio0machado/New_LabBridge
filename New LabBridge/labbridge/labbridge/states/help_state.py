@@ -4,9 +4,10 @@ Gerencia busca, categorias e contato com envio real de email.
 """
 import reflex as rx
 from typing import List, Dict, Any
+from .auth_state import AuthState
 
 
-class HelpState(rx.State):
+class HelpState(AuthState):
     """Estado responsável pela Central de Ajuda"""
 
     # Busca
@@ -30,7 +31,7 @@ class HelpState(rx.State):
     # URLs de integração (configuráveis)
     calendly_url: str = "https://calendly.com/labbridge/suporte"
     intercom_app_id: str = ""  # Configurar quando tiver
-    whatsapp_number: str = "5511999999999"  # Substituir por número real
+    whatsapp_number: str = "5551991914837"  # Configurar com numero real em producao
 
     # Dados de categorias
     categories_data: List[Dict[str, Any]] = [
@@ -227,7 +228,7 @@ class HelpState(rx.State):
                 # Registrar atividade
                 from ..services.local_storage import local_storage
                 local_storage.add_activity_log(
-                    tenant_id="local",
+                    tenant_id=self.current_user.tenant_id if self.current_user else "",
                     action="Contato enviado",
                     details=f"Email de suporte enviado: {subject}",
                     user=self.contact_name
@@ -248,10 +249,9 @@ class HelpState(rx.State):
                 await asyncio.sleep(2)
                 self.close_contact_modal()
             else:
-                # Se email falhar, simular sucesso (fallback)
-                import asyncio
-                await asyncio.sleep(1)
-                self.contact_success = True
+                # Email falhou - informar o usuario
+                self.contact_error = "Nao foi possivel enviar a mensagem. Tente novamente mais tarde."
+                self.contact_success = False
                 self.is_sending_contact = False
 
         except Exception as e:

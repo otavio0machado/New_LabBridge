@@ -1,5 +1,5 @@
 import reflex as rx
-from ..styles import Color, Design, Typography, Animation, Spacing, CARD_STYLE, BUTTON_PRIMARY_STYLE, BUTTON_SECONDARY_STYLE, BUTTON_XL_STYLE, INPUT_STYLE, INPUT_XL_STYLE
+from ..styles import Color, Design, Typography, Spacing, CARD_STYLE, BUTTON_PRIMARY_STYLE, BUTTON_SECONDARY_STYLE, BUTTON_XL_STYLE, INPUT_STYLE, INPUT_XL_STYLE
 
 # =============================================================================
 # BIODIAGNÓSTICO VIBE UI
@@ -18,15 +18,6 @@ def heading(text: str, level: int = 1, color: str = None, **props) -> rx.Compone
     if color: style["color"] = color
     style.update(props)
     return rx.text(text, **style)
-
-def animated_heading(text: str, level: int = 1, animation: str = "fade-in-up", **props) -> rx.Component:
-    """Heading with entrance animation"""
-    map_anim = {
-        "fade-in": "animate-fade-in",
-        "fade-in-up": "animate-fade-in-up",
-        "slide-up": "animate-slide-up"
-    }
-    return heading(text, level=level, class_name=map_anim.get(animation, "animate-fade-in-up"), **props)
 
 def text(content: str, size: str = "body", **props) -> rx.Component:
     """Standardized Text Component"""
@@ -50,19 +41,6 @@ def card(*children, **props) -> rx.Component:
     style = CARD_STYLE.copy()
     style.update(props)
     return rx.box(*children, **style)
-
-def empty_state(icon: str, title: str, description: str, action_label: str = "", on_action=None) -> rx.Component:
-    """Clean Empty State Placeholder"""
-    return card(
-        rx.vstack(
-            rx.icon(tag=icon, size=48, color=Color.TEXT_SECONDARY),
-            heading(title, level=3, color=Color.DEEP),
-            text(description, size="body_secondary", text_align="center", max_width="400px"),
-            rx.cond(action_label != "", button(action_label, on_click=on_action)),
-            padding=Spacing.XXL, align_items="center", gap=Spacing.LG
-        ),
-        text_align="center"
-    )
 
 # --- Actions & Inputs ---
 
@@ -175,26 +153,6 @@ def stat_card(title: str, value: str, icon: str, trend: str = "neutral", subtext
             ),
             gap=Spacing.LG
         )
-    )
-
-def toast(message: str, status: str = "info") -> rx.Component:
-    """Floating Toast Notification"""
-    colors = {
-        "success": (Color.SUCCESS, Color.SUCCESS_BG, "circle-check"),
-        "error": (Color.ERROR, Color.ERROR_BG, "circle-x"),
-        "info": (Color.PRIMARY, Color.PRIMARY_LIGHT, "info"),
-    }
-    color, bg, icon = colors.get(status, colors["info"])
-    
-    return rx.box(
-        rx.hstack(
-            rx.icon(tag=icon, size=20, color=color),
-            rx.text(message, style=Typography.LABEL, color=Color.DEEP),
-            align_items="center", gap=Spacing.MD
-        ),
-        bg=bg, border=f"1px solid {color}40", border_radius=Design.RADIUS_LG,
-        padding=Spacing.MD, box_shadow=Design.SHADOW_MD,
-        position="fixed", bottom="2rem", right="2rem", z_index="9999"
     )
 
 def loading_spinner(text: str = "Carregando...") -> rx.Component:
@@ -484,20 +442,6 @@ def warning_state(
 # DATA DISPLAY COMPONENTS
 # =============================================================================
 
-def data_table_header(*columns: str) -> rx.Component:
-    """Cabeçalho de tabela padronizado"""
-    return rx.table.header(
-        rx.table.row(
-            *[
-                rx.table.column_header_cell(
-                    rx.text(col, font_weight="600", font_size="0.75rem", text_transform="uppercase", letter_spacing="0.05em"),
-                )
-                for col in columns
-            ],
-        ),
-    )
-
-
 def kpi_card(
     label: str,
     value: str,
@@ -622,161 +566,3 @@ def action_card(
     )
 
 
-def filter_bar(*children, on_clear=None) -> rx.Component:
-    """Barra de filtros padronizada"""
-    return rx.box(
-        rx.hstack(
-            *children,
-            rx.spacer(),
-            rx.cond(
-                on_clear is not None,
-                button("Limpar filtros", icon="x", variant="ghost", on_click=on_clear),
-                rx.fragment(),
-            ),
-            spacing="3",
-            align="center",
-            flex_wrap="wrap",
-        ),
-        width="100%",
-        padding=Spacing.MD,
-        bg=Color.BACKGROUND,
-        border_radius=Design.RADIUS_LG,
-        border=f"1px solid {Color.BORDER}",
-        margin_bottom=Spacing.LG,
-    )
-
-
-def progress_bar(value: int, max_value: int = 100, color: str = "primary") -> rx.Component:
-    """Barra de progresso"""
-    color_map = {
-        "primary": Color.PRIMARY,
-        "success": Color.SUCCESS,
-        "warning": Color.WARNING,
-        "error": Color.ERROR,
-    }
-    bar_color = color_map.get(color, Color.PRIMARY)
-    percentage = min(100, max(0, (value / max_value) * 100))
-
-    return rx.box(
-        rx.box(
-            width=f"{percentage}%",
-            height="100%",
-            bg=bar_color,
-            border_radius="full",
-            transition="width 0.5s ease",
-        ),
-        width="100%",
-        height="8px",
-        bg=Color.BACKGROUND,
-        border_radius="full",
-        overflow="hidden",
-    )
-
-
-def timeline_item(
-    title: str,
-    description: str = "",
-    date: str = "",
-    status: str = "default",
-    is_last: bool = False,
-) -> rx.Component:
-    """Item de linha do tempo para histórico"""
-    status_colors = {
-        "success": Color.SUCCESS,
-        "error": Color.ERROR,
-        "warning": Color.WARNING,
-        "default": Color.PRIMARY,
-    }
-    dot_color = status_colors.get(status, Color.PRIMARY)
-
-    return rx.hstack(
-        # Timeline dot and line
-        rx.vstack(
-            rx.box(
-                width="12px",
-                height="12px",
-                bg=dot_color,
-                border_radius="full",
-                border=f"3px solid {Color.SURFACE}",
-                box_shadow=f"0 0 0 2px {dot_color}40",
-            ),
-            rx.cond(
-                not is_last,
-                rx.box(
-                    width="2px",
-                    flex="1",
-                    min_height="40px",
-                    bg=Color.BORDER,
-                ),
-                rx.fragment(),
-            ),
-            spacing="0",
-            align="center",
-        ),
-        # Content
-        rx.vstack(
-            rx.hstack(
-                rx.text(title, font_weight="500", color=Color.TEXT_PRIMARY),
-                rx.spacer(),
-                rx.text(date, font_size="0.75rem", color=Color.TEXT_SECONDARY),
-                width="100%",
-            ),
-            rx.cond(
-                description != "",
-                rx.text(description, font_size="0.875rem", color=Color.TEXT_SECONDARY),
-                rx.fragment(),
-            ),
-            spacing="1",
-            align_items="start",
-            flex="1",
-            padding_bottom=Spacing.LG,
-        ),
-        spacing="3",
-        align_items="start",
-        width="100%",
-    )
-
-
-def status_banner(
-    status: str,
-    title: str,
-    description: str = "",
-) -> rx.Component:
-    """
-    Banner de status semântico padronizado
-
-    Args:
-        status: "critical" | "warning" | "success" | "info"
-        title: Título do banner
-        description: Descrição opcional
-    """
-    config = {
-        "critical": (Color.ERROR, Color.ERROR_BG, Color.ERROR_LIGHT, "circle-alert"),
-        "warning": (Color.WARNING_HOVER, Color.WARNING_BG, Color.WARNING_LIGHT, "triangle-alert"),
-        "success": (Color.SUCCESS, Color.SUCCESS_BG, Color.SUCCESS_LIGHT, "circle-check"),
-        "info": (Color.PRIMARY, Color.PRIMARY_LIGHT, Color.PRIMARY_BORDER, "info"),
-    }
-    text_color, bg_color, border_color, icon = config.get(status, config["info"])
-
-    return rx.box(
-        rx.hstack(
-            rx.icon(tag=icon, color=text_color, size=24),
-            rx.vstack(
-                rx.text(title, font_weight="700", color=text_color),
-                rx.cond(
-                    description != "",
-                    rx.text(description, font_size="0.875rem", color=text_color),
-                    rx.fragment(),
-                ),
-                spacing="1",
-                align_items="start",
-            ),
-            spacing="4",
-            align_items="center",
-        ),
-        bg=bg_color,
-        border=f"1px solid {border_color}",
-        border_radius=Design.RADIUS_LG,
-        padding=Spacing.MD,
-        width="100%",
-    )

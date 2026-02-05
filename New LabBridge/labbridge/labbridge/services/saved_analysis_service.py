@@ -84,7 +84,7 @@ class SavedAnalysisService:
                 # Limpar temp
                 try:
                     os.unlink(tmp_path)
-                except:
+                except OSError:
                     pass
             
             # 2. Criar schema validado
@@ -122,7 +122,7 @@ class SavedAnalysisService:
             analysis_id = saved['id']
 
             # Determinar se está usando armazenamento local
-            use_local = tenant_id == "local" or tenant_id == ""
+            use_local = self.repository._use_local(tenant_id)
 
             # 4. Salvar itens detalhados
             items_count = 0
@@ -207,14 +207,14 @@ class SavedAnalysisService:
                 try:
                     dt = datetime.fromisoformat(analysis['analysis_date'].replace('Z', '+00:00'))
                     analysis['formatted_date'] = dt.strftime('%d/%m/%Y')
-                except:
+                except (ValueError, TypeError):
                     analysis['formatted_date'] = analysis['analysis_date']
             created_at = analysis.get('created_at')
             if created_at:
                 try:
                     dt_created = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
                     analysis['formatted_time'] = dt_created.strftime('%H:%M')
-                except:
+                except (ValueError, TypeError):
                     analysis['formatted_time'] = ""
             else:
                 analysis['formatted_time'] = ""
@@ -275,7 +275,7 @@ class SavedAnalysisService:
             return default
         try:
             return float(val)
-        except:
+        except (ValueError, TypeError):
             return default
 
     def _get_int(self, item: Any, attr: str, default: int = 0) -> int:
@@ -285,7 +285,7 @@ class SavedAnalysisService:
             return default
         try:
             return int(val)
-        except:
+        except (ValueError, TypeError):
             return default
 
 

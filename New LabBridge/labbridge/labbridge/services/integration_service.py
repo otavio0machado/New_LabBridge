@@ -102,8 +102,9 @@ class IntegrationService:
             try:
                 integrations = self.local.get_integrations(tenant_id)
                 return True, integrations, ""
-            except:
-                return self._get_mock_integrations()
+            except Exception as e2:
+                print(f"Erro no fallback local: {e2}")
+                return False, [], f"Erro ao buscar integrações: {str(e)}"
 
     def get_integration_by_id(self, integration_id: str) -> Tuple[bool, Optional[Dict[str, Any]], str]:
         """Busca uma integração específica"""
@@ -225,12 +226,8 @@ class IntegrationService:
         if not success:
             return False, error
 
-        # Simular teste de conexão baseado no tipo
-        # Em produção, aqui seria a lógica real de conexão
+        # TODO: implementar teste real de conexao por tipo de integracao
         integration_name = integration.get("name", "")
-
-        # Simular resultado do teste
-        # Em produção, chamar APIs reais
         if integration.get("status") == "error":
             return False, f"Falha na conexão com {integration_name}: Credenciais inválidas"
 
@@ -257,8 +254,7 @@ class IntegrationService:
             # Marcar como sincronizando
             self.update_integration(integration_id, {"status": "syncing"})
 
-            # Em produção, aqui seria a lógica real de sincronização
-            # Por enquanto, simular sucesso
+            # TODO: implementar sincronizacao real por tipo de integracao
 
             # Atualizar última sincronização
             self.update_integration(integration_id, {
@@ -310,9 +306,8 @@ class IntegrationService:
     def save_credentials(self, integration_id: str, credentials: Dict[str, Any]) -> Tuple[bool, str]:
         """
         Salva credenciais de uma integração.
-        Em produção, essas credenciais devem ser criptografadas.
+        TODO: criptografar credenciais antes de salvar (Vault ou AES).
         """
-        # Em produção, usar Vault ou criptografia antes de salvar
         return self.update_integration(integration_id, {"credentials": credentials})
 
     # =========================================================================
@@ -361,7 +356,8 @@ class IntegrationService:
                 .execute()
 
             return response.data or []
-        except:
+        except Exception as e:
+            print(f"Erro ao buscar logs: {e}")
             return []
 
     # =========================================================================
@@ -386,87 +382,6 @@ class IntegrationService:
         """Retorna catálogo de integrações disponíveis"""
         return self.AVAILABLE_INTEGRATIONS
 
-    # =========================================================================
-    # MOCK DATA (fallback quando Supabase não está configurado)
-    # =========================================================================
-
-    def _get_mock_integrations(self) -> Tuple[bool, List[Dict[str, Any]], str]:
-        """Retorna dados mock para desenvolvimento"""
-        mock_integrations = [
-            {
-                "id": "1",
-                "name": "Shift LIS",
-                "description": "Sistema de Gestão Laboratorial",
-                "category": "lis",
-                "icon": "🔬",
-                "status": "active",
-                "config": {},
-                "last_sync": (datetime.utcnow()).isoformat(),
-                "last_error": None,
-                "created_at": "2024-01-01T00:00:00"
-            },
-            {
-                "id": "2",
-                "name": "Matrix",
-                "description": "Integração via API HL7/FHIR",
-                "category": "lis",
-                "icon": "🧬",
-                "status": "inactive",
-                "config": {},
-                "last_sync": None,
-                "last_error": None,
-                "created_at": "2024-01-15T00:00:00"
-            },
-            {
-                "id": "3",
-                "name": "Concent",
-                "description": "Faturamento TISS e gestão de glosas",
-                "category": "billing",
-                "icon": "💰",
-                "status": "error",
-                "config": {},
-                "last_sync": None,
-                "last_error": "Credenciais expiradas",
-                "created_at": "2024-02-01T00:00:00"
-            },
-            {
-                "id": "4",
-                "name": "Portal TISS",
-                "description": "Envio automático de guias",
-                "category": "billing",
-                "icon": "📋",
-                "status": "inactive",
-                "config": {},
-                "last_sync": None,
-                "last_error": None,
-                "created_at": "2024-02-15T00:00:00"
-            },
-            {
-                "id": "5",
-                "name": "Google Drive",
-                "description": "Backup e exportação de relatórios",
-                "category": "storage",
-                "icon": "📁",
-                "status": "active",
-                "config": {},
-                "last_sync": (datetime.utcnow()).isoformat(),
-                "last_error": None,
-                "created_at": "2024-03-01T00:00:00"
-            },
-            {
-                "id": "6",
-                "name": "WhatsApp Business",
-                "description": "Envio automatizado de resultados",
-                "category": "communication",
-                "icon": "💬",
-                "status": "active",
-                "config": {},
-                "last_sync": (datetime.utcnow()).isoformat(),
-                "last_error": None,
-                "created_at": "2024-03-15T00:00:00"
-            },
-        ]
-        return True, mock_integrations, ""
 
 
 # Singleton

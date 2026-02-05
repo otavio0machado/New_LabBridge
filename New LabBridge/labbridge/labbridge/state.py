@@ -23,25 +23,29 @@ class State(DetectiveState):
 
     # Navegacao e UI Global
     current_page: str = "dashboard"
-    is_mobile_menu_open: bool = False
 
-    # Auditoria e Alertas
-    audit_alert_message: str = ""
-    is_audit_alert_visible: bool = False
-    audit_warning_level: str = "low"  # low, medium, high, critical
+    # Floating Chat
+    show_chat_panel: bool = False
+    _chat_context_loaded: bool = False
 
     # Cache de metricas do dashboard
     _dashboard_cache: Dict[str, Any] = {}
     _dashboard_cache_time: str = ""
 
+    def toggle_chat_panel(self):
+        """Abre/fecha o painel flutuante de chat"""
+        self.show_chat_panel = not self.show_chat_panel
+        if self.show_chat_panel and not self._chat_context_loaded:
+            self.load_context()
+            self._chat_context_loaded = True
+
+    def close_chat_panel(self):
+        """Fecha o painel de chat"""
+        self.show_chat_panel = False
+
     def set_page(self, page: str):
         """Define a pagina atual"""
         self.current_page = page
-        self.is_mobile_menu_open = False
-
-    def toggle_mobile_menu(self):
-        """Alterna visibilidade do menu mobile"""
-        self.is_mobile_menu_open = not self.is_mobile_menu_open
 
     def navigate_to(self, page: str):
         """Navega para uma pagina especifica"""
@@ -49,10 +53,6 @@ class State(DetectiveState):
         if page == "dashboard":
             return rx.redirect("/")
         return rx.redirect(f"/{page}")
-
-    def reset_state(self):
-        """Metodo generico para resetar estados se necessario"""
-        pass
 
     # =====================================================
     # METRICAS DO DASHBOARD - CONECTADAS AOS DADOS REAIS
@@ -71,7 +71,7 @@ class State(DetectiveState):
                 cache_time = datetime.fromisoformat(self._dashboard_cache_time)
                 if (now - cache_time).seconds < 300:
                     return self._dashboard_cache.get("data", {})
-            except:
+            except (ValueError, TypeError):
                 pass
 
         # Buscar dados do banco
@@ -124,13 +124,15 @@ class State(DetectiveState):
         """Numero de divergencias ativas"""
         return len(self.value_divergences)
 
-    @rx.var
+    @rx.var(auto_deps=False, deps=["has_analysis"])
     def monthly_analyses_chart(self) -> List[Dict[str, Any]]:
         """Dados para gráfico de análises mensais - DADOS REAIS do banco"""
         from .services.local_storage import local_storage
-        
+
         try:
-            tenant_id = "local"
+            tenant_id = self.current_user.tenant_id if self.current_user else ""
+            if not tenant_id:
+                return [{"name": m, "analises": 0} for m in ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"]]
             now = datetime.now()
             
             # Buscar últimos 6 meses
@@ -177,19 +179,21 @@ class State(DetectiveState):
             {"name": "Extras", "value": self.exams_only_simus_count},
         ]
 
-    @rx.var
+    @rx.var(auto_deps=False, deps=["compulab_total"])
     def goal_progress(self) -> int:
         """Progresso da meta mensal (percentual) - usa meta configurável"""
         from .services.local_storage import local_storage
-        
+
         # Buscar meta das configurações
-        settings = local_storage.get_user_settings("local", "local-admin")
+        tenant_id = self.current_user.tenant_id if self.current_user else ""
+        user_id = self.current_user.id if self.current_user else ""
+        settings = local_storage.get_user_settings(tenant_id, user_id)
         monthly_goal = 150000.0
         if settings:
             try:
                 goal_str = settings.get("monthly_goal", "150000")
                 monthly_goal = float(goal_str) if goal_str else 150000.0
-            except:
+            except (ValueError, TypeError):
                 pass
         
         current = float(self.compulab_total or 0)
@@ -205,18 +209,20 @@ class State(DetectiveState):
             return f"R$ {self.compulab_total:,.2f}"
         return "R$ 0,00"
 
-    @rx.var
+    @rx.var(auto_deps=False, deps=["compulab_total"])
     def formatted_monthly_goal(self) -> str:
         """Meta mensal formatada - usa meta configurável"""
         from .services.local_storage import local_storage
-        
-        settings = local_storage.get_user_settings("local", "local-admin")
+
+        tenant_id = self.current_user.tenant_id if self.current_user else ""
+        user_id = self.current_user.id if self.current_user else ""
+        settings = local_storage.get_user_settings(tenant_id, user_id)
         monthly_goal = 150000.0
         if settings:
             try:
                 goal_str = settings.get("monthly_goal", "150000")
                 monthly_goal = float(goal_str) if goal_str else 150000.0
-            except:
+            except (ValueError, TypeError):
                 pass
         
         return f"R$ {monthly_goal:,.2f}"

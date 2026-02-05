@@ -134,40 +134,6 @@ class Spacing:
     XL = "32px"
     XXL = "48px"
 
-class Animation:
-    FADE_IN_UP = {
-        "0%": {"opacity": "0", "transform": "translateY(20px)"},
-        "100%": {"opacity": "1", "transform": "translateY(0)"},
-    }
-
-# =============================================================================
-# TYPOGRAPHY (KISS: Default to Reflex Text props, define only specifics)
-# =============================================================================
-# We use standard Reflex rx.text(size="...") but provide helpers here if needed.
-# For now, we trust the defaults + Inter font.
-
-# =============================================================================
-# ANIMATIONS (Vibe Motion)
-# =============================================================================
-STYLES = {
-    "font_family": "'Inter', 'Outfit', sans-serif",
-    "background_color": Color.BACKGROUND,
-    
-    # Keyframes
-    "@keyframes fadeIn": {
-        "from": {"opacity": "0"},
-        "to": {"opacity": "1"},
-    },
-    "@keyframes slideUp": {
-        "from": {"opacity": "0", "transform": "translateY(10px)"},
-        "to": {"opacity": "1", "transform": "translateY(0)"},
-    },
-    
-    # Global Classes
-    ".animate-fade-in": {"animation": "fadeIn 0.4s ease-out"},
-    ".animate-slide-up": {"animation": "slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)"},
-}
-
 # =============================================================================
 # COMPONENT STYLES (Refactored for Reusability)
 # =============================================================================
@@ -298,48 +264,3 @@ BUTTON_SECONDARY_STYLE = {
     }
 }
 
-# Glassmorphism Style
-GLASS_STYLE = {
-    "background_color": "rgba(255, 255, 255, 0.7)",
-    "backdrop_filter": "blur(12px) saturate(180%)",
-    "-webkit-backdrop-filter": "blur(12px) saturate(180%)",
-    "border": "1px solid rgba(255, 255, 255, 0.3)",
-}
-
-# Estilo para Tabelas
-TABLE_STYLE = {
-    "width": "100%",
-    "border_collapse": "separate",
-    "border_spacing": "0",
-    "border": f"1px solid {Color.BORDER}",
-    "border_radius": Design.RADIUS_LG,
-    "overflow": "hidden",
-}
-
-TABLE_HEADER_STYLE = {
-    "bg": Color.PRIMARY_LIGHT,
-    "color": Color.DEEP,
-    "font_weight": "600",
-    "font_size": "0.875rem",
-    "text_transform": "uppercase",
-    "letter_spacing": "0.05em",
-    "padding": f"{Spacing.MD} {Spacing.MD}",
-    "text_align": "left",
-    "border_bottom": f"2px solid {Color.PRIMARY}",
-}
-
-TABLE_CELL_STYLE = {
-    "padding": f"{Spacing.SM} {Spacing.MD}",  
-    "border_bottom": f"1px solid {Color.BORDER}",
-    "color": Color.TEXT_PRIMARY,
-    "font_size": "0.875rem",
-}
-
-TABLE_ROW_STYLE = {
-    "transition": "background-color 0.15s ease",
-    "_hover": {"bg": Color.PRIMARY_LIGHT + "40"}
-}
-
-TABLE_ROW_EVEN_STYLE = {
-    "bg": "#F9FAFB",
-}

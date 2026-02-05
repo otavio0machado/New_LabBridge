@@ -5,13 +5,14 @@ Gerencia planos e pagamentos com Stripe.
 import reflex as rx
 from typing import Optional
 from datetime import datetime
+from .auth_state import AuthState
 
 
-class SubscriptionState(rx.State):
+class SubscriptionState(AuthState):
     """Estado responsavel pelas assinaturas e planos"""
 
     # Plano atual
-    current_plan: str = "pro"  # starter, pro, enterprise
+    current_plan: str = "starter"  # starter, pro, enterprise
     stripe_customer_id: str = ""
     stripe_subscription_id: str = ""
     subscription_status: str = "active"  # active, past_due, canceled
@@ -34,6 +35,11 @@ class SubscriptionState(rx.State):
     payment_success: bool = False
     payment_error: str = ""
     checkout_url: str = ""
+
+    def load_subscription(self):
+        """Carrega plano atual do tenant"""
+        if self.current_tenant:
+            self.current_plan = getattr(self.current_tenant, "plan_type", None) or "starter"
 
     def select_plan(self, plan: str):
         """Seleciona um plano para upgrade/downgrade"""
@@ -93,10 +99,16 @@ class SubscriptionState(rx.State):
         try:
             # Se não tem customer_id, criar um
             if not self.stripe_customer_id:
-                # Em produção, pegar email do AuthState
+                if not self.current_user:
+                    self.payment_error = "Usuario nao autenticado"
+                    self.is_processing = False
+                    yield
+                    return
+                user_email = self.current_user.email
+                user_name = self.current_user.full_name or user_email
                 success, msg, customer_id = stripe_service.create_customer(
-                    email="user@example.com",
-                    name="Usuário LabBridge",
+                    email=user_email,
+                    name=user_name or user_email,
                     metadata={"plan": self.selected_plan}
                 )
                 if success and customer_id:
@@ -145,11 +157,27 @@ class SubscriptionState(rx.State):
 
         yield
 
-    async def handle_checkout_success(self, plan: str):
+    async def handle_checkout_success(self, session_id: str = "", plan: str = ""):
         """Processa retorno de checkout bem-sucedido"""
-        self.current_plan = plan
+        from ..services.stripe_service import stripe_service
+
+        # Em producao, verificar a sessao no Stripe ao inves de confiar no parametro
+        if stripe_service.is_configured and session_id:
+            try:
+                import stripe
+                session = stripe.checkout.Session.retrieve(session_id)
+                verified_plan = session.metadata.get("plan", plan or "starter")
+                self.current_plan = verified_plan
+            except Exception as e:
+                print(f"Erro ao verificar sessao Stripe: {e}")
+                # Fallback: aceitar o parametro com warning
+                self.current_plan = plan or "starter"
+        else:
+            # Modo simulado (dev) - aceitar o parametro
+            self.current_plan = plan or "starter"
+
         self.payment_success = True
-        yield rx.toast.success(f"Assinatura do plano {plan.title()} confirmada!")
+        yield rx.toast.success(f"Assinatura do plano {self.current_plan.title()} confirmada!")
 
     async def open_billing_portal(self):
         """Abre portal de gerenciamento de assinatura"""
@@ -204,8 +232,8 @@ class SubscriptionState(rx.State):
             </ul>
             '''
             
-            # Em produção, enviar para email do admin
-            print(f"📧 Solicitação Enterprise: {self.enterprise_name} - {self.enterprise_company}")
+            # TODO: enviar email_service.send() para admin com conteudo enterprise
+            print(f"Solicitacao Enterprise: {self.enterprise_name} - {self.enterprise_company}")
             
             import asyncio
             await asyncio.sleep(1)

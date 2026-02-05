@@ -19,8 +19,8 @@ class SavedAnalysisRepository:
     @staticmethod
     def _use_local(tenant_id: str = "") -> bool:
         """Determina se deve usar armazenamento local"""
-        # Usar local se: não há Supabase OU tenant é 'local'
-        return not supabase or tenant_id == "local"
+        # Usar local se: não há Supabase OU tenant vazio
+        return not supabase or not tenant_id
 
     @staticmethod
     def create(data: SavedAnalysisCreate) -> Optional[Dict[str, Any]]:
@@ -28,7 +28,7 @@ class SavedAnalysisRepository:
         Cria uma nova análise salva.
         Valida dados com Pydantic antes de persistir.
         """
-        tenant_id = data.tenant_id or "local"
+        tenant_id = data.tenant_id or ""
 
         # Usar armazenamento local se necessário
         if SavedAnalysisRepository._use_local(tenant_id):

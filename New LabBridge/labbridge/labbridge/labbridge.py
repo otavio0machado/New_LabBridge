@@ -5,6 +5,7 @@ Design oficial baseado na identidade visual do laboratório
 import reflex as rx
 from .state import State
 from .components.navbar import navbar, mobile_nav
+from .components.floating_chat import floating_chat
 from .pages.login import login_page
 from .pages.conversor import conversor_page
 from .pages.analise import analise_page
@@ -69,6 +70,10 @@ def authenticated_layout(content: rx.Component = None) -> rx.Component:
             bg=Color.BACKGROUND,
             transition="margin-left 0.3s ease",
         ),
+
+        # Floating AI Chat (Bio IA)
+        floating_chat(),
+
         class_name="font-sans",
     )
 

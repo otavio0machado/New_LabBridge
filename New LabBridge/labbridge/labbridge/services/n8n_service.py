@@ -4,11 +4,14 @@ Serviço de integração com n8n AI Agent.
 Este serviço substitui o DetectiveService local, delegando
 as análises para o AI Agent configurado no n8n.
 """
+import logging
 import os
 import httpx
 import asyncio
 from typing import Optional
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -61,8 +64,8 @@ class N8NAgentService:
                         headers={"Content-Type": "application/json"}
                     )
                     
-                    print(f"DEBUG n8n: Status={response.status_code}, Content-Type={response.headers.get('content-type', 'unknown')}")
-                    print(f"DEBUG n8n: Response preview: {response.text[:300] if response.text else 'EMPTY'}")
+                    logger.debug(f"n8n: Status={response.status_code}, Content-Type={response.headers.get('content-type', 'unknown')}")
+                    logger.debug(f"n8n: Response preview: {response.text[:300] if response.text else 'EMPTY'}")
                     
                     if response.status_code == 200:
                         if not response.text or response.text.strip() == "":
@@ -91,7 +94,7 @@ class N8NAgentService:
                                 return {"success": True, "response": str(data), "agent_thinking": []}
                         except Exception as json_err:
                             # n8n retornou algo que não é JSON - pode ser text puro
-                            print(f"DEBUG n8n: JSON error: {json_err}")
+                            logger.debug(f"n8n: JSON error: {json_err}")
                             if response.text:
                                 return {"success": True, "response": response.text, "agent_thinking": []}
                             return {
@@ -100,7 +103,7 @@ class N8NAgentService:
                                 "agent_thinking": []
                             }
                     else:
-                        print(f"DEBUG n8n: Error status {response.status_code}")
+                        logger.debug(f"n8n: Error status {response.status_code}")
                         return {
                             "success": False,
                             "response": f"Erro do n8n: {response.status_code} - {response.text[:100] if response.text else 'sem detalhes'}",

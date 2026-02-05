@@ -312,34 +312,32 @@ def contact_modal() -> rx.Component:
                     width="100%",
                 ),
             ),
-            rx.dialog.close(
-                rx.hstack(
-                    rx.button(
-                        "Cancelar",
-                        variant="ghost",
-                        on_click=HelpState.close_contact_modal,
-                    ),
-                    rx.cond(
-                        ~HelpState.contact_success,
-                        rx.button(
-                            rx.cond(
-                                HelpState.is_sending_contact,
-                                rx.hstack(rx.spinner(size="1"), rx.text("Enviando..."), spacing="2"),
-                                rx.text("Enviar"),
-                            ),
-                            variant="solid",
-                            bg=Color.PRIMARY,
-                            color="white",
-                            on_click=HelpState.send_contact,
-                            disabled=HelpState.is_sending_contact,
-                        ),
-                        rx.fragment(),
-                    ),
-                    spacing="2",
-                    justify="end",
-                    width="100%",
-                    margin_top=Spacing.MD,
+            rx.hstack(
+                rx.button(
+                    "Cancelar",
+                    variant="ghost",
+                    on_click=HelpState.close_contact_modal,
                 ),
+                rx.cond(
+                    ~HelpState.contact_success,
+                    rx.button(
+                        rx.cond(
+                            HelpState.is_sending_contact,
+                            rx.hstack(rx.spinner(size="1"), rx.text("Enviando..."), spacing="2"),
+                            rx.text("Enviar"),
+                        ),
+                        variant="solid",
+                        bg=Color.PRIMARY,
+                        color="white",
+                        on_click=HelpState.send_contact,
+                        disabled=HelpState.is_sending_contact,
+                    ),
+                    rx.fragment(),
+                ),
+                spacing="2",
+                justify="end",
+                width="100%",
+                margin_top=Spacing.MD,
             ),
             max_width="450px",
         ),

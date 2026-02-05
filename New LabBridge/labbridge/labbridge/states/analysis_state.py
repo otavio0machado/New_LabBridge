@@ -8,7 +8,11 @@ import tempfile
 import base64
 import gc
 import time
+import logging
 from concurrent.futures import ThreadPoolExecutor
+
+logger = logging.getLogger(__name__)
+
 from ..services.cloudinary_service import CloudinaryService
 from ..services.audit_service import AuditService
 from ..services.saved_analysis_service import saved_analysis_service
@@ -519,7 +523,7 @@ class AnalysisState(AuthState):
     def has_analysis(self) -> bool:
         """Verifica se há análise disponível (REATIVO - usa acesso direto)"""
         result = self.compulab_total > 0 or self.simus_total > 0
-        print(f"DEBUG has_analysis (AnalysisState): compulab={self.compulab_total}, simus={self.simus_total}, result={result}")
+        logger.debug(f"has_analysis (AnalysisState): compulab={self.compulab_total}, simus={self.simus_total}, result={result}")
         return result
 
     @rx.var
@@ -865,7 +869,7 @@ class AnalysisState(AuthState):
 
     async def run_analysis(self):
         """Executa a análise comparativa REAL baseada nos arquivos carregados"""
-        print("DEBUG: run_analysis STARTED - REAL ANALYSIS")
+        logger.debug("run_analysis STARTED - REAL ANALYSIS")
         self.is_analyzing = True
         self.analysis_stage = "Iniciando análise..."
         self.error_message = ""
@@ -893,10 +897,10 @@ class AnalysisState(AuthState):
             
             # Carregar COMPULAB
             if self.compulab_file_path and os.path.exists(self.compulab_file_path):
-                print(f"DEBUG: Carregando COMPULAB de arquivo local: {self.compulab_file_path}")
+                logger.debug(f"Carregando COMPULAB de arquivo local: {self.compulab_file_path}")
                 compulab_patients, compulab_total_val = load_from_excel(self.compulab_file_path)
             elif self.compulab_file_url:
-                print(f"DEBUG: Carregando COMPULAB de URL: {self.compulab_file_url}")
+                logger.debug(f"Carregando COMPULAB de URL: {self.compulab_file_url}")
                 response = requests.get(self.compulab_file_url)
                 if response.status_code == 200:
                     compulab_patients, compulab_total_val = load_from_excel(response.content)
@@ -914,10 +918,10 @@ class AnalysisState(AuthState):
             
             # Carregar SIMUS
             if self.simus_file_path and os.path.exists(self.simus_file_path):
-                print(f"DEBUG: Carregando SIMUS de arquivo local: {self.simus_file_path}")
+                logger.debug(f"Carregando SIMUS de arquivo local: {self.simus_file_path}")
                 simus_patients, simus_total_val = load_from_excel(self.simus_file_path)
             elif self.simus_file_url:
-                print(f"DEBUG: Carregando SIMUS de URL: {self.simus_file_url}")
+                logger.debug(f"Carregando SIMUS de URL: {self.simus_file_url}")
                 response = requests.get(self.simus_file_url)
                 if response.status_code == 200:
                     simus_patients, simus_total_val = load_from_excel(response.content)
@@ -929,8 +933,8 @@ class AnalysisState(AuthState):
             if simus_patients is None:
                 raise Exception("Falha ao processar arquivo SIMUS")
             
-            print(f"DEBUG: COMPULAB: {len(compulab_patients)} pacientes, Total: {compulab_total_val}")
-            print(f"DEBUG: SIMUS: {len(simus_patients)} pacientes, Total: {simus_total_val}")
+            logger.debug(f"COMPULAB: {len(compulab_patients)} pacientes, Total: {compulab_total_val}")
+            logger.debug(f"SIMUS: {len(simus_patients)} pacientes, Total: {simus_total_val}")
             
             self.analysis_stage = "Comparando dados..."
             self.analysis_progress_percentage = 50
@@ -1109,7 +1113,7 @@ class AnalysisState(AuthState):
             self.analysis_progress_percentage = 100
             self.analysis_stage = "Concluído"
             
-            print(f"DEBUG: Análise concluída!")
+            logger.debug("Análise concluída!")
             print(f"  - Pacientes somente COMPULAB: {self.patients_only_compulab_count}")
             print(f"  - Pacientes somente SIMUS: {self.patients_only_simus_count}")
             print(f"  - Exames somente COMPULAB: {self.exams_only_compulab_count}")
@@ -1124,7 +1128,7 @@ class AnalysisState(AuthState):
                 yield
             
         except Exception as e:
-            print(f"DEBUG: run_analysis EXCEPTION: {e}")
+            logger.debug(f"run_analysis EXCEPTION: {e}")
             import traceback
             traceback.print_exc()
             self.error_message = f"Erro na análise: {str(e)}"
@@ -1132,7 +1136,7 @@ class AnalysisState(AuthState):
             yield
         finally:
             self.is_analyzing = False
-            print("DEBUG: run_analysis FINISHED")
+            logger.debug("run_analysis FINISHED")
             yield
             # Gerar preview do PDF automaticamente após análise
             if not self.error_message:
@@ -1144,7 +1148,7 @@ class AnalysisState(AuthState):
         """
         Executa análise profunda após a análise comparativa básica.
         """
-        print("DEBUG: run_deep_analysis STARTED")
+        logger.debug("run_deep_analysis STARTED")
         
         try:
             from ..utils.analysis_module import (
@@ -1185,7 +1189,7 @@ class AnalysisState(AuthState):
                         })
             
             if not compulab_rows or not simus_rows:
-                print("DEBUG: Dados vazios, pulando análise profunda")
+                logger.debug("Dados vazios, pulando análise profunda")
                 return
                 
             df_compulab = pd.DataFrame(compulab_rows)
@@ -1199,7 +1203,7 @@ class AnalysisState(AuthState):
             self.extra_patients_analysis = patient_analysis
             self.extra_patients_count = patient_analysis.get("extra_patients_count", 0)
             self.extra_patients_value = patient_analysis.get("extra_patients_value", 0.0)
-            print(f"DEBUG: Extras: {self.extra_patients_count} pacientes, R$ {self.extra_patients_value}")
+            logger.debug(f"Extras: {self.extra_patients_count} pacientes, R$ {self.extra_patients_value}")
             yield
             
             self.analysis_stage = "Análise profunda: exames repetidos..."
@@ -1210,7 +1214,7 @@ class AnalysisState(AuthState):
             self.repeated_exams_analysis = repeated_analysis
             self.repeated_exams_count = repeated_analysis.get("total_repeated_count", 0)
             self.repeated_exams_value = repeated_analysis.get("total_repeated_value", 0.0)
-            print(f"DEBUG: Repetidos: {self.repeated_exams_count} exames, R$ {self.repeated_exams_value}")
+            logger.debug(f"Repetidos: {self.repeated_exams_count} exames, R$ {self.repeated_exams_value}")
             yield
             
             self.analysis_stage = "Análise profunda: calculando..."
@@ -1234,7 +1238,7 @@ class AnalysisState(AuthState):
             )
             self.difference_breakdown = difference_breakdown
             self.residual_unexplained = difference_breakdown.get("residual", 0.0)
-            print(f"DEBUG: Explicado: {difference_breakdown.get('percent_explained', 0):.1f}%")
+            logger.debug(f"Explicado: {difference_breakdown.get('percent_explained', 0):.1f}%")
             yield
             
             self.analysis_stage = "Análise profunda: finalizando..."
@@ -1253,12 +1257,12 @@ class AnalysisState(AuthState):
                 datetime.now().strftime("%d/%m/%Y")
             )
             self.executive_summary = executive_summary
-            print(f"DEBUG: Status: {executive_summary.get('status', 'unknown')}")
+            logger.debug(f"Status: {executive_summary.get('status', 'unknown')}")
             
-            print("DEBUG: run_deep_analysis COMPLETED")
+            logger.debug("run_deep_analysis COMPLETED")
             
         except Exception as e:
-            print(f"DEBUG: run_deep_analysis ERRO: {e}")
+            logger.debug(f"run_deep_analysis ERRO: {e}")
             import traceback
             traceback.print_exc()
             
@@ -1288,7 +1292,7 @@ class AnalysisState(AuthState):
             )
             
             self.pdf_preview_b64 = base64.b64encode(pdf_bytes).decode('utf-8')
-            print("DEBUG: PDF Generated")
+            logger.debug("PDF Generated")
             
             # Upload automático do PDF para Cloudinary
             try:
@@ -1310,16 +1314,16 @@ class AnalysisState(AuthState):
                 
                 if url:
                     self.pdf_url = url
-                    print(f"DEBUG: PDF uploaded to Cloudinary: {url}")
+                    logger.debug(f"PDF uploaded to Cloudinary: {url}")
                 
                 # Limpar temp
                 try:
                     os.unlink(tmp_path)
-                except:
+                except OSError:
                     pass
                     
             except Exception as upload_err:
-                print(f"DEBUG: Upload PDF failed (will use base64): {upload_err}")
+                logger.debug(f"Upload PDF failed (will use base64): {upload_err}")
                 # Se upload falhar, ainda temos o base64
             
         except Exception as e:
@@ -1437,9 +1441,9 @@ class AnalysisState(AuthState):
 
     async def handle_compulab_upload(self, files: List[rx.UploadFile]):
         """Processa upload do arquivo COMPULAB - Salva em disco para evitar travamento"""
-        print(f"DEBUG: Iniciando upload COMPULAB. Files: {len(files) if files else 0}")
+        logger.debug(f"Iniciando upload COMPULAB. Files: {len(files) if files else 0}")
         if not files:
-            print("DEBUG: Nenhum arquivo recebido")
+            logger.debug("Nenhum arquivo recebido")
             return
         
         self.is_uploading = True
@@ -1451,7 +1455,7 @@ class AnalysisState(AuthState):
         if self.compulab_file_path and os.path.exists(self.compulab_file_path):
             try:
                 os.unlink(self.compulab_file_path)
-            except:
+            except OSError:
                 pass
         
         tmp_file_path = None
@@ -1527,9 +1531,9 @@ class AnalysisState(AuthState):
             
             if file_url:
                 self.compulab_file_url = file_url
-                print(f"DEBUG: Upload Cloudinary sucesso: {file_url}")
+                logger.debug(f"Upload Cloudinary sucesso: {file_url}")
             else:
-                print("DEBUG: Erro upload Cloudinary (COMPULAB). Note: Arquivos > 10MB podem falhar no plano gratuito.")
+                logger.debug("Erro upload Cloudinary (COMPULAB). Note: Arquivos > 10MB podem falhar no plano gratuito.")
             
             # Mensagem com detalhes
             size_str = self.compulab_file_size
@@ -1544,16 +1548,16 @@ class AnalysisState(AuthState):
             if tmp_file_path and os.path.exists(tmp_file_path):
                 try:
                     os.unlink(tmp_file_path)
-                except:
+                except OSError:
                     pass
         finally:
             self.is_uploading = False
     
     async def handle_simus_upload(self, files: List[rx.UploadFile]):
         """Processa upload do arquivo SIMUS - Salva em disco para evitar travamento"""
-        print(f"DEBUG: Iniciando upload SIMUS. Files: {len(files) if files else 0}")
+        logger.debug(f"Iniciando upload SIMUS. Files: {len(files) if files else 0}")
         if not files:
-            print("DEBUG: Nenhum arquivo recebido")
+            logger.debug("Nenhum arquivo recebido")
             return
         
         self.is_uploading = True
@@ -1565,7 +1569,7 @@ class AnalysisState(AuthState):
         if self.simus_file_path and os.path.exists(self.simus_file_path):
             try:
                 os.unlink(self.simus_file_path)
-            except:
+            except OSError:
                 pass
         
         tmp_file_path = None
@@ -1641,9 +1645,9 @@ class AnalysisState(AuthState):
             
             if file_url:
                 self.simus_file_url = file_url
-                print(f"DEBUG: Upload Cloudinary sucesso: {file_url}")
+                logger.debug(f"Upload Cloudinary sucesso: {file_url}")
             else:
-                print("DEBUG: Erro upload Cloudinary. Note: Arquivos > 10MB podem falhar no plano gratuito.")
+                logger.debug("Erro upload Cloudinary. Note: Arquivos > 10MB podem falhar no plano gratuito.")
                 # O processo continua usando o arquivo local temporário
             
             # Mensagem com detalhes
@@ -1659,7 +1663,7 @@ class AnalysisState(AuthState):
             if tmp_file_path and os.path.exists(tmp_file_path):
                 try:
                     os.unlink(tmp_file_path)
-                except:
+                except OSError:
                     pass
         finally:
             self.is_uploading = False
@@ -1669,7 +1673,7 @@ class AnalysisState(AuthState):
         if self.compulab_file_path and os.path.exists(self.compulab_file_path):
             try:
                 os.unlink(self.compulab_file_path)
-            except:
+            except OSError:
                 pass
         self.compulab_file_name = ""
         self.compulab_file_path = ""
@@ -1686,7 +1690,7 @@ class AnalysisState(AuthState):
         if self.simus_file_path and os.path.exists(self.simus_file_path):
             try:
                 os.unlink(self.simus_file_path)
-            except:
+            except OSError:
                 pass
         self.simus_file_name = ""
         self.simus_file_path = ""
@@ -1778,41 +1782,41 @@ class AnalysisState(AuthState):
             simus_bytes = b""
             
             # DEBUG: Log para diagnóstico
-            print(f"DEBUG generate_csvs: compulab_file_path='{self.compulab_file_path}'")
-            print(f"DEBUG generate_csvs: simus_file_path='{self.simus_file_path}'")
-            print(f"DEBUG generate_csvs: compulab_file_path exists={os.path.exists(self.compulab_file_path) if self.compulab_file_path else 'N/A'}")
-            print(f"DEBUG generate_csvs: simus_file_path exists={os.path.exists(self.simus_file_path) if self.simus_file_path else 'N/A'}")
+            logger.debug(f"generate_csvs: compulab_file_path='{self.compulab_file_path}'")
+            logger.debug(f"generate_csvs: simus_file_path='{self.simus_file_path}'")
+            logger.debug(f"generate_csvs: compulab_file_path exists={os.path.exists(self.compulab_file_path) if self.compulab_file_path else 'N/A'}")
+            logger.debug(f"generate_csvs: simus_file_path exists={os.path.exists(self.simus_file_path) if self.simus_file_path else 'N/A'}")
             
             if self.compulab_file_path and os.path.exists(self.compulab_file_path):
                 with open(self.compulab_file_path, 'rb') as f:
                     compulab_bytes = f.read()
-                print(f"DEBUG generate_csvs: compulab_bytes lidos do disco, tamanho={len(compulab_bytes)} bytes")
+                logger.debug(f"generate_csvs: compulab_bytes lidos do disco, tamanho={len(compulab_bytes)} bytes")
             else:
                 compulab_bytes = self.compulab_file_bytes
-                print(f"DEBUG generate_csvs: usando compulab_file_bytes em memória, tamanho={len(compulab_bytes)} bytes")
+                logger.debug(f"generate_csvs: usando compulab_file_bytes em memória, tamanho={len(compulab_bytes)} bytes")
             
             if self.simus_file_path and os.path.exists(self.simus_file_path):
                 with open(self.simus_file_path, 'rb') as f:
                     simus_bytes = f.read()
-                print(f"DEBUG generate_csvs: simus_bytes lidos do disco, tamanho={len(simus_bytes)} bytes")
+                logger.debug(f"generate_csvs: simus_bytes lidos do disco, tamanho={len(simus_bytes)} bytes")
             else:
                 simus_bytes = self.simus_file_bytes
-                print(f"DEBUG generate_csvs: usando simus_file_bytes em memória, tamanho={len(simus_bytes)} bytes")
+                logger.debug(f"generate_csvs: usando simus_file_bytes em memória, tamanho={len(simus_bytes)} bytes")
             
             # Validar se os bytes foram lidos
             if len(compulab_bytes) == 0:
                 self.error_message = "ERRO: Arquivo COMPULAB está vazio ou não foi carregado. Tente fazer upload novamente."
-                print("DEBUG generate_csvs: ERRO - compulab_bytes está vazio!")
+                logger.debug("generate_csvs: ERRO - compulab_bytes está vazio!")
                 yield
                 return
                 
             if len(simus_bytes) == 0:
                 self.error_message = "ERRO: Arquivo SIMUS está vazio ou não foi carregado. Tente fazer upload novamente."
-                print("DEBUG generate_csvs: ERRO - simus_bytes está vazio!")
+                logger.debug("generate_csvs: ERRO - simus_bytes está vazio!")
                 yield
                 return
             
-            print(f"DEBUG generate_csvs: Iniciando processamento com ThreadPoolExecutor...")
+            logger.debug("generate_csvs: Iniciando processamento com ThreadPoolExecutor...")
             
             with ThreadPoolExecutor() as executor:
                 future = executor.submit(
@@ -1841,15 +1845,15 @@ class AnalysisState(AuthState):
                 self.csv_progress_percentage = 100
                 self.csv_stage = "Concluído"
                 self.success_message = "SUCESSO: CSVs gerados com sucesso!"
-                print(f"DEBUG generate_csvs: SUCESSO! compulab_csv={len(compulab_csv) if compulab_csv else 0} chars, simus_csv={len(simus_csv) if simus_csv else 0} chars")
+                logger.debug(f"generate_csvs: SUCESSO! compulab_csv={len(compulab_csv) if compulab_csv else 0} chars, simus_csv={len(simus_csv) if simus_csv else 0} chars")
                 yield
             else:
                 self.error_message = "ERRO: Erro ao gerar CSVs. Verifique os arquivos."
-                print("DEBUG generate_csvs: Falha - success=False retornado por generate_excel_from_pdfs")
+                logger.debug("generate_csvs: Falha - success=False retornado por generate_excel_from_pdfs")
                 yield
         except Exception as e:
             import traceback
-            print(f"DEBUG generate_csvs: EXCEÇÃO: {e}")
+            logger.debug(f"generate_csvs: EXCEÇÃO: {e}")
             traceback.print_exc()
             self.error_message = f"ERRO: Erro: {str(e)}"
             yield
@@ -1912,11 +1916,11 @@ class AnalysisState(AuthState):
             if self.pdf_preview_b64:
                 try:
                     pdf_bytes = base64.b64decode(self.pdf_preview_b64)
-                except:
+                except (ValueError, TypeError):
                     pass
             
             # Obter tenant_id
-            tenant_id = self.current_tenant.id if self.current_tenant else "demo_tenant"
+            tenant_id = self.current_tenant.id if self.current_tenant else ""
 
             # Chamar serviço de salvamento
             result = await saved_analysis_service.save_complete_analysis(
@@ -1983,7 +1987,7 @@ class AnalysisState(AuthState):
         yield
         
         try:
-            tenant_id = self.current_tenant.id if self.current_tenant else "demo_tenant"
+            tenant_id = self.current_tenant.id if self.current_tenant else ""
             # Executar em thread pool para não bloquear
             loop = asyncio.get_event_loop()
             analyses = await loop.run_in_executor(
@@ -2157,7 +2161,7 @@ class AnalysisState(AuthState):
             return
         
         try:
-            tenant_id = self.current_tenant.id if self.current_tenant else "demo_tenant"
+            tenant_id = self.current_tenant.id if self.current_tenant else ""
             results = saved_analysis_service.search_analyses(tenant_id, query)
             self.saved_analyses_list = results
         except Exception as e:

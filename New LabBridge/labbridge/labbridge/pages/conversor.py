@@ -2,7 +2,7 @@ import reflex as rx
 from ..state import State
 from ..components.file_upload import file_upload_enhanced
 from ..components import ui
-from ..styles import Color, Design, Typography, Spacing
+from ..styles import Color, Design, Spacing
 
 def feature_card(icon: str, title: str, description: str, delay: str = "0s") -> rx.Component:
     """Card de funcionalidade premium com animação"""
@@ -125,7 +125,7 @@ def conversor_page() -> rx.Component:
                         rx.box(width=["20px", "40px"], height="2px", bg=Color.BORDER),
                         step_indicator("2", "Conversão", is_active=State.is_generating_csv, is_completed=State.csv_generated),
                         rx.box(width=["20px", "40px"], height="2px", bg=Color.BORDER),
-                        step_indicator("3", "Excel", is_active=State.csv_generated, is_completed=False),
+                        step_indicator("3", "Excel", is_active=State.csv_generated, is_completed=State.csv_generated),
                         spacing="0",
                         align_items="center",
                         gap=["2", "4"],
@@ -221,7 +221,7 @@ def conversor_page() -> rx.Component:
                                     rx.spinner(size="2", color=Color.PRIMARY),
                                     rx.text(State.csv_stage, font_weight="600", color=Color.DEEP),
                                     rx.spacer(),
-                                    rx.text(f"{State.csv_progress_percentage}%", font_weight="700", color=Color.PRIMARY),
+                                    rx.text(State.csv_progress_percentage.to(str) + "%", font_weight="700", color=Color.PRIMARY),
                                     width="100%",
                                     align_items="center",
                                 ),
@@ -230,7 +230,7 @@ def conversor_page() -> rx.Component:
                                         bg=Color.GRADIENT_PRIMARY,
                                         border_radius="full",
                                         transition="width 0.3s ease",
-                                        width=rx.cond(State.csv_progress_percentage > 0, f"{State.csv_progress_percentage}%", "0%"),
+                                        width=rx.cond(State.csv_progress_percentage > 0, State.csv_progress_percentage.to(str) + "%", "0%"),
                                         height="100%",
                                         position="relative",
                                         overflow="hidden",
@@ -334,7 +334,7 @@ def conversor_page() -> rx.Component:
                 rx.box(
                     rx.hstack(
                         rx.icon(tag="info", size=20, color=Color.PRIMARY),
-                        rx.text("Dica Pro: Os arquivos são processados localmente e nunca deixam seu computador.", font_size="0.85rem", color=Color.TEXT_SECONDARY),
+                        rx.text("Dica Pro: Os arquivos sao processados de forma segura em nossos servidores e nao sao armazenados apos o processamento.", font_size="0.85rem", color=Color.TEXT_SECONDARY),
                         align_items="center",
                         spacing="3",
                     ),

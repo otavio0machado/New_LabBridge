@@ -22,9 +22,8 @@ class SubscriptionService:
     def get_tenant_subscription(self, tenant_id: str) -> Optional[Subscription]:
         """
         Retorna a assinatura ativa de um tenant.
-        MOCK: Retorna uma assinatura fictícia.
+        TODO: buscar no Supabase (tabela subscriptions) em vez de mock.
         """
-        # Em produção: buscar no Supabase (tabela subscriptions)
         return Subscription(
             id=f"sub_{tenant_id}",
             tenant_id=tenant_id,

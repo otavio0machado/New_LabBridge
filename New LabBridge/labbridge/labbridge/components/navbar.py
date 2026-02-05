@@ -116,7 +116,7 @@ def sidebar() -> rx.Component:
                         rx.menu.trigger(
                             rx.hstack(
                                 rx.avatar(
-                                    fallback="AD",
+                                    fallback=State.tenant_name[:2],
                                     size="2",
                                     radius="full",
                                     bg=Color.PRIMARY,
@@ -124,13 +124,13 @@ def sidebar() -> rx.Component:
                                 ),
                                 rx.vstack(
                                     rx.text(
-                                        "Admin",
+                                        State.tenant_name,
                                         font_size="0.875rem",
                                         font_weight="600",
                                         color=Color.TEXT_PRIMARY,
                                     ),
                                     rx.text(
-                                        "Administrador",
+                                        State.user_role,
                                         font_size="0.75rem",
                                         color=Color.TEXT_SECONDARY,
                                     ),
@@ -259,7 +259,7 @@ def top_bar() -> rx.Component:
                     rx.menu.root(
                         rx.menu.trigger(
                             rx.avatar(
-                                fallback="AD",
+                                fallback=State.tenant_name[:2],
                                 size="2",
                                 radius="full",
                                 bg=Color.PRIMARY,
@@ -317,7 +317,7 @@ def mobile_nav_trigger() -> rx.Component:
                         rx.text(item["label"], font_size="0.9rem"),
                         spacing="3",
                     ),
-                    on_select=lambda i=item: State.set_page(i["id"]),
+                    on_select=lambda i=item: State.navigate_to(i["id"]),
                     padding="12px",
                 )
                 for item in NAV_ITEMS

@@ -4,29 +4,30 @@ NotificationBell - Componente de UI para Centro de Notificações
 """
 import reflex as rx
 from ..states.notification_state import NotificationState
+from ..styles import Color, Design, Spacing
 
 
 def notification_item(notification: dict) -> rx.Component:
     """Renderiza um item de notificação"""
-    
+
     return rx.box(
         rx.hstack(
             rx.icon(
                 "bell",
                 size=18,
-                color=rx.color("blue", 10)
+                color=Color.PRIMARY
             ),
             rx.vstack(
                 rx.text(
                     notification["title"],
                     font_weight="500",
                     font_size="14px",
-                    color=rx.color("gray", 12)
+                    color=Color.TEXT_PRIMARY
                 ),
                 rx.text(
                     notification["message"],
                     font_size="12px",
-                    color=rx.color("gray", 10),
+                    color=Color.TEXT_SECONDARY,
                     max_width="250px",
                     overflow="hidden",
                     text_overflow="ellipsis",
@@ -42,20 +43,20 @@ def notification_item(notification: dict) -> rx.Component:
         ),
         padding="12px",
         cursor="pointer",
-        _hover={"background": rx.color("gray", 3)},
-        border_bottom=f"1px solid {rx.color('gray', 4)}",
+        _hover={"background": Color.BACKGROUND},
+        border_bottom=f"1px solid {Color.BORDER}",
         on_click=NotificationState.mark_as_read(notification["id"])
     )
 
 
 def notification_bell() -> rx.Component:
     """Componente do sino de notificações"""
-    
+
     return rx.box(
         # Botão do sino
         rx.button(
             rx.box(
-                rx.icon("bell", size=20, color=rx.color("gray", 11)),
+                rx.icon("bell", size=20, color=Color.TEXT_PRIMARY),
                 # Badge de contagem
                 rx.cond(
                     NotificationState.has_unread,
@@ -72,7 +73,7 @@ def notification_bell() -> rx.Component:
                         min_width="18px",
                         height="18px",
                         border_radius="9px",
-                        bg=rx.color("red", 9),
+                        bg=Color.ERROR,
                         display="flex",
                         align_items="center",
                         justify_content="center",
@@ -87,7 +88,7 @@ def notification_bell() -> rx.Component:
             on_click=NotificationState.toggle_notifications,
             cursor="pointer"
         ),
-        
+
         # Dropdown de notificações
         rx.cond(
             NotificationState.show_notifications,
@@ -114,9 +115,9 @@ def notification_bell() -> rx.Component:
                     ),
                     width="100%",
                     padding="12px",
-                    border_bottom=f"1px solid {rx.color('gray', 5)}"
+                    border_bottom=f"1px solid {Color.BORDER}"
                 ),
-                
+
                 # Lista de notificações
                 rx.cond(
                     NotificationState.notifications.length() > 0,
@@ -130,10 +131,10 @@ def notification_bell() -> rx.Component:
                     ),
                     rx.box(
                         rx.vstack(
-                            rx.icon("bell-off", size=32, color=rx.color("gray", 8)),
+                            rx.icon("bell-off", size=32, color=Color.TEXT_SECONDARY),
                             rx.text(
                                 "Nenhuma notificação",
-                                color=rx.color("gray", 9),
+                                color=Color.TEXT_SECONDARY,
                                 font_size="14px"
                             ),
                             spacing="2",
@@ -142,7 +143,7 @@ def notification_bell() -> rx.Component:
                         )
                     )
                 ),
-                
+
                 # Footer
                 rx.hstack(
                     rx.button(
@@ -157,28 +158,23 @@ def notification_bell() -> rx.Component:
                     justify="center",
                     width="100%",
                     padding="8px",
-                    border_top=f"1px solid {rx.color('gray', 5)}"
+                    border_top=f"1px solid {Color.BORDER}"
                 ),
-                
+
                 position="absolute",
                 top="100%",
                 right="0",
                 width="340px",
-                bg=rx.color("gray", 1),
-                border=f"1px solid {rx.color('gray', 5)}",
-                border_radius="8px",
-                box_shadow="0 4px 12px rgba(0,0,0,0.15)",
+                bg=Color.SURFACE,
+                border=f"1px solid {Color.BORDER}",
+                border_radius=Design.RADIUS_MD,
+                box_shadow=Design.SHADOW_LG,
                 z_index="1000",
                 margin_top="8px"
             ),
             rx.box()
         ),
-        
+
         position="relative",
         on_mount=NotificationState.load_notifications
     )
-
-
-def notification_center() -> rx.Component:
-    """Componente completo do centro de notificações para sidebar/header"""
-    return notification_bell()

@@ -7,11 +7,14 @@ Segue as diretrizes da skill "O Oráculo":
 - JSON Mode para respostas estruturadas
 - Logging de uso
 """
+import logging
 import os
 import asyncio
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -186,14 +189,14 @@ class AIService:
                     
                     # Log usage
                     usage = response.usage
-                    print(f"DEBUG OpenAI: modelo={model}, tokens_in={usage.prompt_tokens}, tokens_out={usage.completion_tokens}")
+                    logger.debug(f"OpenAI: modelo={model}, tokens_in={usage.prompt_tokens}, tokens_out={usage.completion_tokens}")
                     
                     return result
                     
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
                         wait_time = 2 ** attempt
-                        print(f"DEBUG: Rate limit, aguardando {wait_time}s...")
+                        logger.debug(f"Rate limit, aguardando {wait_time}s...")
                         await asyncio.sleep(wait_time)
                     else:
                         raise
@@ -236,7 +239,7 @@ class AIService:
                     
                     # Log usage (se disponível)
                     if hasattr(response, 'usage_metadata'):
-                        print(f"DEBUG Gemini: modelo={model}, tokens={response.usage_metadata}")
+                        logger.debug(f"Gemini: modelo={model}, tokens={response.usage_metadata}")
                     
                     return result
                     
@@ -244,7 +247,7 @@ class AIService:
                     error_str = str(e).lower()
                     if "resource_exhausted" in error_str or "429" in error_str or "quota" in error_str:
                         wait_time = 2 ** attempt
-                        print(f"DEBUG: Rate limit Gemini, aguardando {wait_time}s...")
+                        logger.debug(f"Rate limit Gemini, aguardando {wait_time}s...")
                         await asyncio.sleep(wait_time)
                     else:
                         raise
@@ -310,7 +313,7 @@ class AIService:
         """Executa análise usando o provedor e modelo especificados"""
         prompt = self.build_prompt(analysis_data)
         
-        print(f"DEBUG AIService: provider={provider}, model={model}")
+        logger.debug(f"AIService: provider={provider}, model={model}")
         
         if provider == "OpenAI":
             return await self.analyze_with_openai(prompt, model)

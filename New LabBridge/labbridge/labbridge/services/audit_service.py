@@ -10,17 +10,14 @@ class AuditService:
     """Operações de banco de dados para Resumos de Auditoria"""
     
     @staticmethod
-    async def save_audit_summary(data: Dict[str, Any]) -> Dict[str, Any]:
+    async def save_audit_summary(data: Dict[str, Any], tenant_id: str = "") -> Dict[str, Any]:
         """Salva resumo de uma análise no banco de dados"""
         if not supabase:
             return {}
-            
+
         try:
-            # Tabela audit_summaries (deve ser criada no Supabase)
-            # colunas: created_at, compulab_total, simus_total, missing_exams_count, 
-            # divergences_count, missing_patients_count, ai_summary (text)
-            
             db_data = {
+                "tenant_id": tenant_id,
                 "compulab_total": data.get("compulab_total", 0.0),
                 "simus_total": data.get("simus_total", 0.0),
                 "missing_exams_count": data.get("missing_exams_count", 0),
@@ -55,46 +52,46 @@ class AuditService:
             return {}
 
     @staticmethod
-    async def get_audit_history(limit: int = 12) -> List[Dict[str, Any]]:
+    async def get_audit_history(tenant_id: str = "", limit: int = 12) -> List[Dict[str, Any]]:
         """Busca histórico de resumos de auditoria"""
         if not supabase:
             return []
         try:
-            response = supabase.table("audit_summaries")\
-                .select("*")\
-                .order("created_at", desc=True)\
-                .limit(limit)\
-                .execute()
+            query = supabase.table("audit_summaries").select("*")
+            if tenant_id:
+                query = query.eq("tenant_id", tenant_id)
+            response = query.order("created_at", desc=True).limit(limit).execute()
             return response.data
         except Exception as e:
             print(f"Erro ao buscar histórico de auditoria: {e}")
             return []
 
     @staticmethod
-    async def get_latest_audit_summary() -> Optional[Dict[str, Any]]:
+    async def get_latest_audit_summary(tenant_id: str = "") -> Optional[Dict[str, Any]]:
         """Busca o resumo da última análise realizada"""
         if not supabase:
             return None
-            
+
         try:
-            response = supabase.table("audit_summaries")\
-                .select("*")\
-                .order("created_at", desc=True)\
-                .limit(1)\
-                .execute()
-                
+            query = supabase.table("audit_summaries").select("*")
+            if tenant_id:
+                query = query.eq("tenant_id", tenant_id)
+            response = query.order("created_at", desc=True).limit(1).execute()
+
             return response.data[0] if response.data else None
         except Exception as e:
             print(f"Erro ao buscar último resumo: {e}")
             return None
 
     @staticmethod
-    async def get_patient_history(patient_name: str, exam_name: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def get_patient_history(patient_name: str, tenant_id: str = "", exam_name: Optional[str] = None) -> List[Dict[str, Any]]:
         """Busca histórico de um paciente no Supabase"""
         if not supabase:
             return []
         try:
             query = supabase.table("patient_history").select("*").eq("patient_name", patient_name)
+            if tenant_id:
+                query = query.eq("tenant_id", tenant_id)
             if exam_name:
                 query = query.eq("exam_name", exam_name)
             response = query.order("created_at", desc=True).execute()
@@ -126,12 +123,15 @@ class AuditService:
             return {}
 
     @staticmethod
-    async def get_resolutions() -> Dict[str, str]:
+    async def get_resolutions(tenant_id: str = "") -> Dict[str, str]:
         """Busca todas as resoluções ativas para mapeamento no estado"""
         if not supabase:
             return {}
         try:
-            response = supabase.table("patient_history").select("patient_name, exam_name, status").execute()
+            query = supabase.table("patient_history").select("patient_name, exam_name, status")
+            if tenant_id:
+                query = query.eq("tenant_id", tenant_id)
+            response = query.execute()
             # Retorna um dict {(paciente, exame): status}
             return { (r["patient_name"], r["exam_name"]): r["status"] for r in response.data }
         except Exception as e:
