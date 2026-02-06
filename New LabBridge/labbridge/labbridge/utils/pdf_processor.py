@@ -368,7 +368,7 @@ def extract_compulab_patients(pdf_file, progress_callback: Optional[Callable[[in
                 if total_value > Decimal("1000"):
                     break
     except Exception as e:
-        print(f"Erro ao processar COMPULAB: {e}")
+        logger.error(f"Erro ao processar COMPULAB: {e}")
         return None, None
 
     return patients, total_value
@@ -432,7 +432,7 @@ class SimusPDFParser:
             return self.extracted_patients, final_total, self.total_sigtap, self.total_contratualizado
             
         except Exception as e:
-            print(f"Erro fatal no parser SIMUS: {e}")
+            logger.error(f"Erro fatal no parser SIMUS: {e}")
             return {}, Decimal('0'), None, None
 
     def _extract_header_totals(self, first_page):
@@ -449,7 +449,7 @@ class SimusPDFParser:
                 self.total_contratualizado = parse_currency_value(contrat_match.group(1)) or Decimal('0')
                 
         except Exception as e:
-            print(f"Erro ao extrair totais do cabeçalho: {e}")
+            logger.error(f"Erro ao extrair totais do cabeçalho: {e}")
 
     def _strategy_table_extraction(self, pdf, total_pages, progress_callback) -> bool:
         """Estratégia 1: Extração estruturada de tabelas"""
@@ -469,7 +469,7 @@ class SimusPDFParser:
                     
             return len(self.extracted_patients) > 0
         except Exception as e:
-            print(f"Erro na estratégia de tabelas: {e}")
+            logger.error(f"Erro na estratégia de tabelas: {e}")
             return False
 
     def _process_table(self, table, current_patient):
@@ -764,7 +764,7 @@ def generate_excel_from_pdfs(compulab_pdf_bytes, simus_pdf_bytes, progress_callb
         return compulab_excel_b64, simus_excel_b64, True
             
     except Exception as e:
-        print(f"Erro ao gerar Excels: {e}")
+        logger.error(f"Erro ao gerar Excels: {e}")
         if progress_callback:
             progress_callback(0, f"Erro: {str(e)}")
         return None, None, False
@@ -817,7 +817,7 @@ def load_from_csv(csv_content):
         
         return patients, total_value
     except Exception as e:
-        print(f"Erro ao ler CSV: {e}")
+        logger.error(f"Erro ao ler CSV: {e}")
         return None, None
 
 
@@ -905,7 +905,7 @@ def load_from_excel(file_path):
             
         return patients, total_value
     except Exception as e:
-        print(f"Erro ao carregar Excel: {e}")
+        logger.error(f"Erro ao carregar Excel: {e}")
         return None, Decimal('0')
 
 

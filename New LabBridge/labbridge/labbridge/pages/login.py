@@ -2,78 +2,6 @@ import reflex as rx
 from ..state import State
 from ..styles import Color, Spacing, Design
 from ..components import ui
-from ..states.auth_state import AuthState
-
-
-def oauth_buttons() -> rx.Component:
-    """Botões de login social (Google e Microsoft)"""
-    return rx.vstack(
-        # Separador "ou"
-        rx.hstack(
-            rx.divider(width="100%", color=Color.BORDER),
-            rx.text("ou", color=Color.TEXT_SECONDARY, font_size="0.875rem", padding_x="12px", white_space="nowrap"),
-            rx.divider(width="100%", color=Color.BORDER),
-            width="100%",
-            align="center",
-            margin_y=Spacing.MD,
-        ),
-        
-        # Botão Google
-        rx.button(
-            rx.hstack(
-                rx.icon(tag="chrome", size=18),
-                rx.text("Continuar com Google"),
-                spacing="3",
-                align="center",
-            ),
-            variant="outline",
-            width="100%",
-            size="3",
-            cursor="pointer",
-            on_click=AuthState.login_with_google,
-            disabled=AuthState.oauth_loading,
-            _hover={"bg": Color.BACKGROUND},
-        ),
-        
-        # Botão Microsoft
-        rx.button(
-            rx.hstack(
-                rx.icon(tag="monitor", size=18),
-                rx.text("Continuar com Microsoft"),
-                spacing="3",
-                align="center",
-            ),
-            variant="outline",
-            width="100%",
-            size="3",
-            cursor="pointer",
-            on_click=AuthState.login_with_microsoft,
-            disabled=AuthState.oauth_loading,
-            _hover={"bg": Color.BACKGROUND},
-        ),
-        
-        # Erro OAuth
-        rx.cond(
-            AuthState.oauth_error != "",
-            rx.box(
-                rx.text(AuthState.oauth_error, color=Color.ERROR, font_size="0.75rem"),
-                margin_top=Spacing.SM,
-            ),
-        ),
-        
-        # Loading OAuth
-        rx.cond(
-            AuthState.oauth_loading,
-            rx.center(
-                rx.spinner(size="2"),
-                width="100%",
-                padding_y="8px",
-            ),
-        ),
-        
-        spacing="2",
-        width="100%",
-    )
 
 
 def login_form() -> rx.Component:
@@ -144,8 +72,6 @@ def login_form() -> rx.Component:
                         margin_top=Spacing.SM,
                     ),
                 ),
-                # Botões OAuth (Google / Microsoft)
-                oauth_buttons(),
                 gap=Spacing.LG,
                 width="100%",
             ),

@@ -3,8 +3,11 @@ State - Estado Global da Aplicacao (Modularizado)
 Composicao dos estados modulares + metricas do dashboard conectadas ao banco.
 """
 import reflex as rx
+import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 # Import Modular States
 from .states.detective_state import DetectiveState
@@ -88,7 +91,7 @@ class State(DetectiveState):
             self._dashboard_cache_time = now.isoformat()
             return data
         except Exception as e:
-            print(f"Erro ao buscar dados mensais: {e}")
+            logger.error(f"Erro ao buscar dados mensais: {e}")
             return {}
 
     @rx.var(auto_deps=False, deps=["has_analysis"])
@@ -158,7 +161,7 @@ class State(DetectiveState):
             
             return chart_data
         except Exception as e:
-            print(f"Erro ao gerar gráfico: {e}")
+            logger.error(f"Erro ao gerar gráfico: {e}")
             # Fallback
             return [
                 {"name": "Jan", "analises": 0},

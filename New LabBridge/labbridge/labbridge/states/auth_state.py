@@ -6,6 +6,9 @@ import reflex as rx
 from typing import Optional
 from ..config import Config
 from ..models import User, Tenant
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AuthState(rx.State):
@@ -108,7 +111,7 @@ class AuthState(rx.State):
                 self.reset_error = message
 
         except Exception as e:
-            print(f"Erro na recuperacao de senha: {e}")
+            logger.error(f"Erro na recuperacao de senha: {e}")
             self.reset_error = f"Erro de conexao: {str(e)}"
 
         finally:
@@ -177,7 +180,7 @@ class AuthState(rx.State):
                 self.login_error = ""
                 self.login_password = ""  # Limpar senha por seguranca
 
-                print(f"Login bem-sucedido: {self.current_user.email} (tenant: {self.current_tenant.name})")
+                logger.info(f"Login bem-sucedido: {self.current_user.email} (tenant: {self.current_tenant.name})")
 
                 self.login_loading = False
                 yield rx.redirect("/")
@@ -187,7 +190,7 @@ class AuthState(rx.State):
                 self.is_authenticated = False
 
         except Exception as e:
-            print(f"Erro no login: {e}")
+            logger.error(f"Erro no login: {e}")
             self.login_error = f"Erro de conexao: {str(e)}"
             self.is_authenticated = False
 
@@ -253,7 +256,7 @@ class AuthState(rx.State):
                 self.register_error = error or "Erro ao criar conta"
 
         except Exception as e:
-            print(f"Erro no registro: {e}")
+            logger.error(f"Erro no registro: {e}")
             self.register_error = f"Erro de conexao: {str(e)}"
 
         finally:
@@ -266,7 +269,7 @@ class AuthState(rx.State):
         try:
             auth_service.sign_out()
         except Exception as e:
-            print(f"Erro no logout: {e}")
+            logger.error(f"Erro no logout: {e}")
 
         # Limpar estado
         self.is_authenticated = False
@@ -387,7 +390,7 @@ class AuthState(rx.State):
                 self.oauth_error = error or "Erro ao iniciar login com Google"
                 
         except Exception as e:
-            print(f"Erro OAuth Google: {e}")
+            logger.error(f"Erro OAuth Google: {e}")
             self.oauth_error = f"Erro: {str(e)}"
         
         finally:
@@ -416,7 +419,7 @@ class AuthState(rx.State):
                 self.oauth_error = error or "Erro ao iniciar login com Microsoft"
                 
         except Exception as e:
-            print(f"Erro OAuth Microsoft: {e}")
+            logger.error(f"Erro OAuth Microsoft: {e}")
             self.oauth_error = f"Erro: {str(e)}"
         
         finally:
@@ -468,5 +471,5 @@ class AuthState(rx.State):
                 return rx.redirect("/login")
 
         except Exception as e:
-            print(f"Erro no callback OAuth: {e}")
+            logger.error(f"Erro no callback OAuth: {e}")
             return rx.redirect("/login")

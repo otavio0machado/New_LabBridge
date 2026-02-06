@@ -5,7 +5,10 @@ Centro de notificações do LabBridge
 import reflex as rx
 from typing import List, Dict, Any
 from datetime import datetime
+import logging
 from .auth_state import AuthState
+
+logger = logging.getLogger(__name__)
 
 
 class NotificationState(AuthState):
@@ -60,7 +63,7 @@ class NotificationState(AuthState):
             notifications = local_storage.get_notifications(tenant_id, limit=50)
             self.notifications = notifications
         except Exception as e:
-            print(f"Erro ao carregar notificações: {e}")
+            logger.error(f"Erro ao carregar notificacoes: {e}")
             self.notifications = []
         finally:
             self.is_loading = False
@@ -78,7 +81,7 @@ class NotificationState(AuthState):
                     n["read"] = True
                     break
         except Exception as e:
-            print(f"Erro ao marcar como lida: {e}")
+            logger.error(f"Erro ao marcar como lida: {e}")
 
     def mark_all_read(self):
         """Marca todas como lidas"""
@@ -92,7 +95,7 @@ class NotificationState(AuthState):
             for n in self.notifications:
                 n["read"] = True
         except Exception as e:
-            print(f"Erro ao marcar todas: {e}")
+            logger.error(f"Erro ao marcar todas: {e}")
 
     def clear_notifications(self):
         """Limpa todas as notificações"""
@@ -103,7 +106,7 @@ class NotificationState(AuthState):
             local_storage.clear_notifications(tenant_id)
             self.notifications = []
         except Exception as e:
-            print(f"Erro ao limpar: {e}")
+            logger.error(f"Erro ao limpar: {e}")
 
     # =========================================================================
     # HELPER: CRIAR NOTIFICAÇÕES
@@ -129,7 +132,7 @@ class NotificationState(AuthState):
                 action_url=action_url
             )
         except Exception as e:
-            print(f"Erro ao criar notificação: {e}")
+            logger.error(f"Erro ao criar notificacao: {e}")
 
     # Notificações pré-definidas
     @staticmethod

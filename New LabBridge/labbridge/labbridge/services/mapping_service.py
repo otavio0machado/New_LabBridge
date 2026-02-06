@@ -43,7 +43,7 @@ class MappingService:
                         result[original] = canonical
                 return result
         except Exception as e:
-            print(f"Erro ao carregar mapeamentos locais: {e}")
+            logger.error(f"Erro ao carregar mapeamentos locais: {e}")
         return {}
 
     @classmethod
@@ -55,7 +55,7 @@ class MappingService:
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(payload, f, indent=2, ensure_ascii=True)
         except Exception as e:
-            print(f"Erro ao salvar mapeamentos locais: {e}")
+            logger.error(f"Erro ao salvar mapeamentos locais: {e}")
 
     @classmethod
     async def load_mappings(cls, force: bool = False):
@@ -80,7 +80,7 @@ class MappingService:
                 if "exam_mappings" in msg:
                     logger.debug("Tabela exam_mappings indisponivel no Supabase. Usando fallback local.")
                 else:
-                    print(f"Erro ao carregar mapeamentos de exames: {e}")
+                    logger.error(f"Erro ao carregar mapeamentos de exames: {e}")
 
         if not loaded:
             local = cls._load_local_mappings()
@@ -124,7 +124,7 @@ class MappingService:
                 if "exam_mappings" in msg:
                     logger.debug("Supabase sem exam_mappings. Salvando mapeamento localmente.")
                 else:
-                    print(f"Erro ao adicionar mapeamento: {e}")
+                    logger.error(f"Erro ao adicionar mapeamento: {e}")
 
         cls._cache[data["original_name"]] = data["canonical_name"]
         cls._save_local_mappings(cls._cache)

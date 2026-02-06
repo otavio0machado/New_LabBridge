@@ -1,11 +1,11 @@
 {
-  "name": "Biodiagnóstico 3.0",
-  "short_name": "Biodiagnóstico",
-  "description": "Sistema de Inteligência Laboratorial e Qualidade",
+  "name": "LabBridge",
+  "short_name": "LabBridge",
+  "description": "Sistema de Auditoria & Inteligencia Laboratorial",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1B5E20",
+  "theme_color": "#2563EB",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -13,9 +13,19 @@
       "type": "image/x-icon"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ]
 }

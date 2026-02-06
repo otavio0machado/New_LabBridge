@@ -2,11 +2,14 @@
 IntegrationService - Gerenciamento de Integrações Externas
 CRUD completo de integrações com suporte a Supabase e fallback SQLite local
 """
+import logging
 from typing import Dict, Any, Optional, Tuple, List
 from datetime import datetime
 from .supabase_client import supabase
 from .local_storage import local_storage
 from ..config import Config
+
+logger = logging.getLogger(__name__)
 
 
 class IntegrationService:
@@ -97,13 +100,13 @@ class IntegrationService:
 
             return True, response.data or [], ""
         except Exception as e:
-            print(f"Erro ao buscar integrações do Supabase: {e}")
+            logger.error(f"Erro ao buscar integracoes do Supabase: {e}")
             # Fallback para local
             try:
                 integrations = self.local.get_integrations(tenant_id)
                 return True, integrations, ""
             except Exception as e2:
-                print(f"Erro no fallback local: {e2}")
+                logger.error(f"Erro no fallback local: {e2}")
                 return False, [], f"Erro ao buscar integrações: {str(e)}"
 
     def get_integration_by_id(self, integration_id: str) -> Tuple[bool, Optional[Dict[str, Any]], str]:
@@ -340,7 +343,7 @@ class IntegrationService:
                 .insert(log_data)\
                 .execute()
         except Exception as e:
-            print(f"Erro ao registrar log: {e}")
+            logger.error(f"Erro ao registrar log: {e}")
 
     def get_logs(self, integration_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """Retorna logs de uma integração"""
@@ -357,7 +360,7 @@ class IntegrationService:
 
             return response.data or []
         except Exception as e:
-            print(f"Erro ao buscar logs: {e}")
+            logger.error(f"Erro ao buscar logs: {e}")
             return []
 
     # =========================================================================

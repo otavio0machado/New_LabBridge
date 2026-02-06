@@ -216,19 +216,28 @@ html {
 
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #F8F9FA;
+    background: #F1F5F9;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #2563EB;
-    border-radius: 5px;
+    background: #CBD5E1;
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #1D4ED8;
+    background: #94A3B8;
+}
+
+/* Hide "Built with Reflex" badge */
+a[href="https://reflex.dev"] {
+    display: none !important;
+}
+
+div:has(> a[href="https://reflex.dev"]) {
+    display: none !important;
 }

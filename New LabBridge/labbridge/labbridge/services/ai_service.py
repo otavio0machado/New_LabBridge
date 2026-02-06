@@ -206,7 +206,7 @@ class AIService:
         except ImportError:
             raise ImportError("Pacote 'openai' não instalado. Execute: pip install openai")
         except Exception as e:
-            print(f"ERROR OpenAI: {e}")
+            logger.error(f"ERROR OpenAI: {e}")
             raise
     
     async def analyze_with_gemini(self, prompt: str, model: str = "gemini-2.5-flash") -> str:
@@ -257,7 +257,7 @@ class AIService:
         except ImportError:
             raise ImportError("Pacote 'google-genai' não instalado. Execute: pip install google-genai")
         except Exception as e:
-            print(f"ERROR Gemini: {e}")
+            logger.error(f"ERROR Gemini: {e}")
             raise
 
     async def analyze_clinical_consistency(self, audit_data: Dict[str, Any]) -> ClinicalConsistencySchema:
@@ -301,7 +301,7 @@ class AIService:
             return response.parsed
             
         except Exception as e:
-            print(f"Clinical AI Audit Error: {e}")
+            logger.error(f"Clinical AI Audit Error: {e}")
             return ClinicalConsistencySchema(
                 is_consistent=True,
                 reason=f"Erro na análise de IA: {str(e)}",

@@ -1,5 +1,8 @@
 from typing import Generic, TypeVar, List, Optional, Dict, Any
 from ..services.supabase_client import supabase
+import logging
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
@@ -26,7 +29,7 @@ class BaseRepository(Generic[T]):
             response = query.limit(limit).execute()
             return response.data if response.data else []
         except Exception as e:
-            print(f"Erro ao buscar dados em {self.table_name}: {e}")
+            logger.error(f"Erro ao buscar dados em {self.table_name}: {e}")
             return []
 
     def get_by_id(self, id: str, tenant_id: str = "") -> Optional[Dict[str, Any]]:
@@ -40,7 +43,7 @@ class BaseRepository(Generic[T]):
                 return response.data[0]
             return None
         except Exception as e:
-            print(f"Erro ao buscar ID {id} em {self.table_name}: {e}")
+            logger.error(f"Erro ao buscar ID {id} em {self.table_name}: {e}")
             return None
 
     def create(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -51,7 +54,7 @@ class BaseRepository(Generic[T]):
                 return response.data[0]
             return None
         except Exception as e:
-            print(f"Erro ao criar registro em {self.table_name}: {e}")
+            logger.error(f"Erro ao criar registro em {self.table_name}: {e}")
             return None
 
     def update(self, id: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -62,7 +65,7 @@ class BaseRepository(Generic[T]):
                 return response.data[0]
             return None
         except Exception as e:
-            print(f"Erro ao atualizar ID {id} em {self.table_name}: {e}")
+            logger.error(f"Erro ao atualizar ID {id} em {self.table_name}: {e}")
             return None
 
     def delete(self, id: str, tenant_id: str = "") -> bool:
@@ -74,5 +77,5 @@ class BaseRepository(Generic[T]):
             query.execute()
             return True
         except Exception as e:
-            print(f"Erro ao deletar ID {id} em {self.table_name}: {e}")
+            logger.error(f"Erro ao deletar ID {id} em {self.table_name}: {e}")
             return False

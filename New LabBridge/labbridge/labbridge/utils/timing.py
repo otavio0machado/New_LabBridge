@@ -1,7 +1,10 @@
+import logging
 import os
 import time
 from contextlib import contextmanager
 from typing import Dict, Iterable, Tuple
+
+logger = logging.getLogger(__name__)
 
 
 def timing_enabled() -> bool:
@@ -45,6 +48,6 @@ class TimingCollector:
         if not self.enabled:
             return
         total = self.total()
-        print(f"TIMING: {label} total={total:.3f}s")
+        logger.debug(f"TIMING: {label} total={total:.3f}s")
         for name, duration in self.summary():
-            print(f"  - {name}: {duration:.3f}s")
+            logger.debug(f"  - {name}: {duration:.3f}s")

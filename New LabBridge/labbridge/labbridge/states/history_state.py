@@ -6,7 +6,10 @@ import reflex as rx
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 import base64
+import logging
 from .auth_state import AuthState
+
+logger = logging.getLogger(__name__)
 
 
 class HistoryState(AuthState):
@@ -163,7 +166,7 @@ class HistoryState(AuthState):
             self.load_activity_log()
             
         except Exception as e:
-            print(f"Erro ao carregar histórico: {e}")
+            logger.error(f"Erro ao carregar historico: {e}")
 
     def load_activity_log(self):
         """Carrega log de atividades do banco"""
@@ -174,7 +177,7 @@ class HistoryState(AuthState):
             logs = local_storage.get_activity_logs(tenant_id, limit=50)
             self.activity_log = logs
         except Exception as e:
-            print(f"Erro ao carregar logs: {e}")
+            logger.error(f"Erro ao carregar logs: {e}")
             self.activity_log = []
 
     # =========================================================================
@@ -193,7 +196,7 @@ class HistoryState(AuthState):
                 user=user
             )
         except Exception as e:
-            print(f"Erro ao registrar atividade: {e}")
+            logger.error(f"Erro ao registrar atividade: {e}")
 
     # =========================================================================
     # EXPORT

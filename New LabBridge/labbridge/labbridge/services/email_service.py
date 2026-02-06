@@ -7,6 +7,7 @@ Suporta múltiplos providers:
 - Resend
 - SendGrid
 """
+import logging
 import os
 from typing import Dict, Any, Optional, Tuple, List
 from datetime import datetime
@@ -14,6 +15,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import smtplib
 import ssl
+
+logger = logging.getLogger(__name__)
 
 
 class EmailService:
@@ -110,8 +113,8 @@ class EmailService:
         """
         if not self.is_configured:
             # Modo simulado - apenas loga
-            print(f"📧 [SIMULADO] Email para {to_email}")
-            print(f"   Assunto: {subject}")
+            logger.info(f"[SIMULADO] Email para {to_email}")
+            logger.info(f"   Assunto: {subject}")
             return True, "Email enviado (modo simulado)"
         
         # Tenta Resend primeiro
@@ -153,7 +156,7 @@ class EmailService:
             
             return True, "Email enviado com sucesso"
         except Exception as e:
-            print(f"Erro SMTP: {e}")
+            logger.error(f"Erro SMTP: {e}")
             return False, f"Erro ao enviar email: {str(e)}"
     
     def _send_via_resend(self, to_email: str, subject: str, html_content: str) -> Tuple[bool, str]:
@@ -170,7 +173,7 @@ class EmailService:
             })
             return True, "Email enviado com sucesso"
         except ImportError:
-            print("⚠️ Resend não instalado. Execute: pip install resend")
+            logger.warning("Resend nao instalado. Execute: pip install resend")
             return False, "Resend não instalado"
         except Exception as e:
             return False, f"Erro Resend: {str(e)}"

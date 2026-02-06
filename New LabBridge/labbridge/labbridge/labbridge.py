@@ -2,8 +2,19 @@
 Biodiagnóstico Lab - Sistema de Administração
 Design oficial baseado na identidade visual do laboratório
 """
+import logging
 import reflex as rx
+from .config import Config
 from .state import State
+
+logger = logging.getLogger(__name__)
+
+# Validar configuracoes obrigatorias na inicializacao
+try:
+    Config.validate()
+except ValueError as e:
+    logger.error(f"Configuracao invalida: {e}")
+    raise
 from .components.navbar import navbar, mobile_nav
 from .components.floating_chat import floating_chat
 from .pages.login import login_page
@@ -138,11 +149,24 @@ app = rx.App(
         radius="large",
     ),
     head_components=[
+        # Favicon
+        rx.el.link(rel="icon", href="/favicon.ico", sizes="any"),
+        rx.el.link(rel="icon", href="/favicon.png", type="image/png"),
+        rx.el.link(rel="apple-touch-icon", href="/apple-touch-icon.png"),
+        # PWA
         rx.el.link(rel="manifest", href="/manifest.json"),
-        rx.el.meta(name="theme-color", content=Color.DEEP),
+        rx.el.meta(name="theme-color", content="#2563EB"),
         rx.el.meta(name="apple-mobile-web-app-capable", content="yes"),
         rx.el.meta(name="mobile-web-app-capable", content="yes"),
         rx.el.meta(name="apple-mobile-web-app-status-bar-style", content="black-translucent"),
+        # SEO
+        rx.el.meta(name="description", content="LabBridge - Sistema de Auditoria & Inteligencia Laboratorial. Seguranca e precisao em cada analise."),
+        rx.el.meta(name="author", content="LabBridge"),
+        # Open Graph
+        rx.el.meta(property="og:title", content="LabBridge"),
+        rx.el.meta(property="og:description", content="Sistema de Auditoria & Inteligencia Laboratorial"),
+        rx.el.meta(property="og:type", content="website"),
+        rx.el.meta(property="og:image", content="/labbridge_logo.png"),
     ],
     stylesheets=[
         "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap",

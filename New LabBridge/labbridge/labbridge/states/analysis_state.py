@@ -1114,11 +1114,11 @@ class AnalysisState(AuthState):
             self.analysis_stage = "Concluído"
             
             logger.debug("Análise concluída!")
-            print(f"  - Pacientes somente COMPULAB: {self.patients_only_compulab_count}")
-            print(f"  - Pacientes somente SIMUS: {self.patients_only_simus_count}")
-            print(f"  - Exames somente COMPULAB: {self.exams_only_compulab_count}")
-            print(f"  - Diferença de Valores: {self.divergences_count}")
-            print(f"  - Exames somente SIMUS: {self.exams_only_simus_count}")
+            logger.debug(f"  - Pacientes somente COMPULAB: {self.patients_only_compulab_count}")
+            logger.debug(f"  - Pacientes somente SIMUS: {self.patients_only_simus_count}")
+            logger.debug(f"  - Exames somente COMPULAB: {self.exams_only_compulab_count}")
+            logger.debug(f"  - Diferenca de Valores: {self.divergences_count}")
+            logger.debug(f"  - Exames somente SIMUS: {self.exams_only_simus_count}")
             
             yield  # Propagate state to frontend
             
@@ -1327,7 +1327,7 @@ class AnalysisState(AuthState):
                 # Se upload falhar, ainda temos o base64
             
         except Exception as e:
-            print(f"Erro ao gerar PDF: {e}")
+            logger.error(f"Erro ao gerar PDF: {e}")
             self.error_message = f"Erro ao gerar PDF: {str(e)}"
 
     async def download_analysis_pdf(self):
@@ -1356,7 +1356,7 @@ class AnalysisState(AuthState):
             filename = f"relatorio_analise_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
             yield rx.download(data=pdf_bytes, filename=filename)
         except Exception as e:
-            print(f"Erro ao gerar PDF para download: {e}")
+            logger.error(f"Erro ao gerar PDF para download: {e}")
             self.error_message = f"Erro ao gerar PDF: {str(e)}"
 
     def export_analysis_csv(self):
@@ -1975,7 +1975,7 @@ class AnalysisState(AuthState):
             self.save_analysis_message = f"❌ Data inválida: {str(e)}"
             yield
         except Exception as e:
-            print(f"Erro ao salvar análise: {e}")
+            logger.error(f"Erro ao salvar analise: {e}")
             self.save_analysis_message = f"❌ Erro: {str(e)}"
             yield
         finally:
@@ -1996,7 +1996,7 @@ class AnalysisState(AuthState):
             )
             self.saved_analyses_list = analyses
         except Exception as e:
-            print(f"Erro ao carregar análises salvas: {e}")
+            logger.error(f"Erro ao carregar analises salvas: {e}")
             if "Could not find the table" in str(e):
                 self.error_message = "⚠️ Tabela de análises não encontrada. Execute a migração '001_saved_analyses.sql' no Supabase."
             self.saved_analyses_list = []
@@ -2100,7 +2100,7 @@ class AnalysisState(AuthState):
             await self.generate_pdf_report()
             
         except Exception as e:
-            print(f"Erro ao carregar análise: {e}")
+            logger.error(f"Erro ao carregar analise: {e}")
             self.error_message = f"Erro ao carregar análise: {str(e)}"
         finally:
             self.is_analyzing = False
@@ -2165,4 +2165,4 @@ class AnalysisState(AuthState):
             results = saved_analysis_service.search_analyses(tenant_id, query)
             self.saved_analyses_list = results
         except Exception as e:
-            print(f"Erro na busca: {e}")
+            logger.error(f"Erro na busca: {e}")

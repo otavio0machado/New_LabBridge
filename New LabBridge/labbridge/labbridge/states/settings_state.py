@@ -4,7 +4,10 @@ Gerencia as configuracoes do usuario e laboratorio.
 """
 import reflex as rx
 from typing import Optional
+import logging
 from .auth_state import AuthState
+
+logger = logging.getLogger(__name__)
 
 
 class SettingsState(AuthState):
@@ -173,7 +176,7 @@ class SettingsState(AuthState):
                 self.settings_success = False
 
         except Exception as e:
-            print(f"Erro ao salvar configuracoes: {e}")
+            logger.error(f"Erro ao salvar configuracoes: {e}")
             self.settings_message = f"Erro ao salvar: {str(e)}"
             self.settings_success = False
         finally:
@@ -204,7 +207,7 @@ class SettingsState(AuthState):
                 self.two_factor_enabled = settings.get("two_factor_enabled", False)
                 self.session_timeout = settings.get("session_timeout", "30")
         except Exception as e:
-            print(f"Erro ao carregar configuracoes: {e}")
+            logger.error(f"Erro ao carregar configuracoes: {e}")
 
     async def change_password(self):
         """Altera a senha do usuario"""

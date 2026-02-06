@@ -8,6 +8,9 @@ from datetime import date
 from ..services.supabase_client import supabase
 from ..services.local_storage import local_storage
 from ..schemas.analysis_schemas import SavedAnalysisCreate, AnalysisItemCreate, analysis_to_dict
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SavedAnalysisRepository:
@@ -35,9 +38,9 @@ class SavedAnalysisRepository:
             db_data = analysis_to_dict(data)
             success, result, error = local_storage.create_analysis(db_data)
             if success:
-                print(f"✅ Análise '{data.analysis_name}' salva localmente!")
+                logger.info(f"Analise '{data.analysis_name}' salva localmente!")
                 return result
-            print(f"❌ Erro ao salvar análise local: {error}")
+            logger.error(f"Erro ao salvar analise local: {error}")
             return None
 
         try:
@@ -50,12 +53,12 @@ class SavedAnalysisRepository:
             response = supabase.table(SavedAnalysisRepository.table_name).insert(db_data).execute()
 
             if response.data:
-                print(f"✅ Análise '{data.analysis_name}' salva com sucesso!")
+                logger.info(f"Analise '{data.analysis_name}' salva com sucesso!")
                 return response.data[0]
             return None
 
         except Exception as e:
-            print(f"❌ Erro ao salvar análise: {e}")
+            logger.error(f"Erro ao salvar analise: {e}")
             return None
 
     @staticmethod
@@ -77,7 +80,7 @@ class SavedAnalysisRepository:
                 .execute()
             return response.data or []
         except Exception as e:
-            print(f"Erro ao buscar análises: {e}")
+            logger.error(f"Erro ao buscar analises: {e}")
             # Fallback para local em caso de erro
             return local_storage.get_saved_analyses(tenant_id, limit)
 
@@ -100,7 +103,7 @@ class SavedAnalysisRepository:
                 .execute()
             return response.data
         except Exception as e:
-            print(f"Erro ao buscar análise {analysis_id}: {e}")
+            logger.error(f"Erro ao buscar analise {analysis_id}: {e}")
             return None
 
     @staticmethod
@@ -120,7 +123,7 @@ class SavedAnalysisRepository:
                 return response.data[0]
             return None
         except Exception as e:
-            print(f"Erro ao buscar análise '{name}' em {analysis_date}: {e}")
+            logger.error(f"Erro ao buscar analise '{name}' em {analysis_date}: {e}")
             return None
 
     @staticmethod
@@ -140,7 +143,7 @@ class SavedAnalysisRepository:
                 .execute()
             return response.data or []
         except Exception as e:
-            print(f"Erro na busca: {e}")
+            logger.error(f"Erro na busca: {e}")
             return local_storage.search_analyses(tenant_id, query, limit)
 
     @staticmethod
@@ -163,7 +166,7 @@ class SavedAnalysisRepository:
                 return response.data[0]
             return None
         except Exception as e:
-            print(f"Erro ao atualizar análise {analysis_id}: {e}")
+            logger.error(f"Erro ao atualizar analise {analysis_id}: {e}")
             return None
 
     @staticmethod
@@ -185,7 +188,7 @@ class SavedAnalysisRepository:
                 .execute()
             return bool(response.data)
         except Exception as e:
-            print(f"Erro ao deletar análise {analysis_id}: {e}")
+            logger.error(f"Erro ao deletar analise {analysis_id}: {e}")
             return False
 
     @staticmethod
@@ -231,7 +234,7 @@ class SavedAnalysisRepository:
 
             return len(response.data) if response.data else 0
         except Exception as e:
-            print(f"Erro ao adicionar itens: {e}")
+            logger.error(f"Erro ao adicionar itens: {e}")
             return 0
 
     @staticmethod
@@ -256,7 +259,7 @@ class SavedAnalysisRepository:
             response = query.order("created_at").execute()
             return response.data or []
         except Exception as e:
-            print(f"Erro ao buscar itens: {e}")
+            logger.error(f"Erro ao buscar itens: {e}")
             return []
 
     @staticmethod
@@ -272,7 +275,7 @@ class SavedAnalysisRepository:
                 .execute()
             return bool(response.data)
         except Exception as e:
-            print(f"Erro ao atualizar item {item_id}: {e}")
+            logger.error(f"Erro ao atualizar item {item_id}: {e}")
             return False
 
     # ===== Métodos de Relatórios =====
@@ -314,5 +317,5 @@ class SavedAnalysisRepository:
                 "total_difference": total_compulab - total_simus
             }
         except Exception as e:
-            print(f"Erro ao gerar resumo mensal: {e}")
+            logger.error(f"Erro ao gerar resumo mensal: {e}")
             return local_storage.get_monthly_summary(tenant_id, year, month)

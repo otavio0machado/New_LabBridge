@@ -2,9 +2,12 @@
 Stripe Service - Integração com Stripe para pagamentos
 LabBridge
 """
+import logging
 import os
 from typing import Dict, Any, Optional, Tuple
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class StripeService:
@@ -42,7 +45,7 @@ class StripeService:
                 stripe.api_key = self.api_key
                 self._stripe = stripe
             except ImportError:
-                print("⚠️ Stripe não instalado. Execute: pip install stripe")
+                logger.warning("Stripe nao instalado. Execute: pip install stripe")
                 return None
         return self._stripe
     

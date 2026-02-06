@@ -3,10 +3,13 @@ SavedAnalysisService - O Arquivista
 Serviço de alto nível para salvar, recuperar e gerenciar análises completas.
 Coordena Repository, Cloudinary e validação.
 """
+import logging
 from typing import Dict, Any, List, Optional
 from datetime import date, datetime
 import asyncio
 import base64
+
+logger = logging.getLogger(__name__)
 
 from ..repositories.saved_analysis_repository import SavedAnalysisRepository
 from ..schemas.analysis_schemas import SavedAnalysisCreate, AnalysisItemCreate
@@ -66,7 +69,7 @@ class SavedAnalysisService:
             # 1. Upload do PDF se fornecido em bytes
             report_url = analysis_report_url
             if pdf_bytes and not report_url:
-                print("📤 Fazendo upload do relatório PDF...")
+                logger.info("Fazendo upload do relatorio PDF...")
                 # Criar arquivo temp para upload
                 import tempfile
                 import os
@@ -182,7 +185,7 @@ class SavedAnalysisService:
                 ]
                 items_count += self.repository.add_items(analysis_id, items, use_local=use_local)
 
-            print(f"✅ Análise salva: {name} ({analysis_date}) - {items_count} itens")
+            logger.info(f"Analise salva: {name} ({analysis_date}) - {items_count} itens")
             
             return {
                 "success": True,
@@ -194,7 +197,7 @@ class SavedAnalysisService:
         except ValueError as e:
             return {"success": False, "message": f"Dados inválidos: {str(e)}"}
         except Exception as e:
-            print(f"❌ Erro ao salvar análise: {e}")
+            logger.error(f"Erro ao salvar analise: {e}")
             return {"success": False, "message": f"Erro: {str(e)}"}
 
     def get_saved_analyses(self, tenant_id: str, limit: int = 50) -> List[Dict[str, Any]]:

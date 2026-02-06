@@ -3,11 +3,14 @@ LocalStorage - Serviço de persistência local com SQLite
 Permite funcionamento offline e fácil migração para backend real
 """
 import json
+import logging
 import sqlite3
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 import secrets
+
+logger = logging.getLogger(__name__)
 
 
 class LocalStorage:
@@ -709,7 +712,7 @@ class LocalStorage:
             ))
             self._conn.commit()
         except Exception as e:
-            print(f"Erro ao registrar log: {e}")
+            logger.error(f"Erro ao registrar log: {e}")
     
     def get_integration_logs(self, integration_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """Retorna logs de uma integração"""
@@ -870,7 +873,7 @@ class LocalStorage:
             self._conn.commit()
             return count
         except Exception as e:
-            print(f"Erro ao adicionar itens: {e}")
+            logger.error(f"Erro ao adicionar itens: {e}")
             return 0
 
     def get_analysis_items(self, analysis_id: str, item_type: str = None) -> List[Dict[str, Any]]:
@@ -1106,7 +1109,7 @@ class LocalStorage:
             self._conn.commit()
             return True
         except Exception as e:
-            print(f"Erro ao adicionar log: {e}")
+            logger.error(f"Erro ao adicionar log: {e}")
             return False
 
     def get_activity_logs(self, tenant_id: str, limit: int = 50) -> List[Dict[str, Any]]:
@@ -1172,7 +1175,7 @@ class LocalStorage:
             self._conn.commit()
             return notif_id
         except Exception as e:
-            print(f"Erro ao adicionar notificação: {e}")
+            logger.error(f"Erro ao adicionar notificacao: {e}")
             return None
 
     def get_notifications(self, tenant_id: str, limit: int = 50, unread_only: bool = False) -> List[Dict[str, Any]]:
@@ -1207,7 +1210,7 @@ class LocalStorage:
             self._conn.commit()
             return True
         except Exception as e:
-            print(f"Erro ao marcar notificação: {e}")
+            logger.error(f"Erro ao marcar notificacao: {e}")
             return False
 
     def mark_all_notifications_read(self, tenant_id: str) -> bool:
@@ -1221,7 +1224,7 @@ class LocalStorage:
             self._conn.commit()
             return True
         except Exception as e:
-            print(f"Erro ao marcar notificações: {e}")
+            logger.error(f"Erro ao marcar notificacoes: {e}")
             return False
 
     def clear_notifications(self, tenant_id: str) -> bool:
@@ -1235,7 +1238,7 @@ class LocalStorage:
             self._conn.commit()
             return True
         except Exception as e:
-            print(f"Erro ao limpar notificações: {e}")
+            logger.error(f"Erro ao limpar notificacoes: {e}")
             return False
 
     def delete_old_notifications(self, days: int = 30) -> int:

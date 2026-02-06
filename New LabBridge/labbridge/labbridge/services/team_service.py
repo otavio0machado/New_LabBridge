@@ -2,12 +2,15 @@
 TeamService - Gerenciamento de Equipe e Permissões
 CRUD completo de membros com suporte a Supabase e fallback SQLite local
 """
+import logging
 from typing import Dict, Any, Optional, Tuple, List
 from datetime import datetime, timedelta
 import secrets
 from .supabase_client import supabase
 from .local_storage import local_storage
 from ..config import Config
+
+logger = logging.getLogger(__name__)
 
 
 class TeamService:
@@ -46,13 +49,13 @@ class TeamService:
 
             return True, response.data or [], ""
         except Exception as e:
-            print(f"Erro ao buscar membros do Supabase: {e}")
+            logger.error(f"Erro ao buscar membros do Supabase: {e}")
             # Fallback para local
             try:
                 members = self.local.get_team_members(tenant_id)
                 return True, members, ""
             except Exception as e2:
-                print(f"Erro no fallback local: {e2}")
+                logger.error(f"Erro no fallback local: {e2}")
                 return False, [], f"Erro ao buscar membros: {str(e)}"
 
     def get_member_by_id(self, member_id: str) -> Tuple[bool, Optional[Dict[str, Any]], str]:
@@ -242,7 +245,7 @@ class TeamService:
 
             return response.data or []
         except Exception as e:
-            print(f"Erro ao buscar convites: {e}")
+            logger.error(f"Erro ao buscar convites: {e}")
             return []
 
     def accept_invite(self, token: str, user_name: str = "") -> Tuple[bool, str]:

@@ -2,9 +2,12 @@
 Serviço de Histórico de Auditorias
 Laboratório Biodiagnóstico
 """
+import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from .supabase_client import supabase
+
+logger = logging.getLogger(__name__)
 
 class AuditService:
     """Operações de banco de dados para Resumos de Auditoria"""
@@ -31,24 +34,24 @@ class AuditService:
         except Exception as e:
             err_msg = str(e)
             if "PGRST205" in err_msg or "audit_summaries" in err_msg:
-                print("--- AVISO: TABELA 'audit_summaries' NÃO ENCONTRADA NO SUPABASE ---")
-                print("Para corrigir, execute este SQL no Painel do Supabase:")
-                print("""
-                CREATE TABLE public.audit_summaries (
-                    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    created_at timestamptz DEFAULT now(),
-                    compulab_total double precision,
-                    simus_total double precision,
-                    missing_exams_count integer,
-                    divergences_count integer,
-                    missing_patients_count integer,
-                    ai_summary text
-                );
-                ALTER TABLE public.audit_summaries ENABLE ROW LEVEL SECURITY;
-                CREATE POLICY \"Permitir acesso público\" ON public.audit_summaries FOR ALL USING (true);
-                """)
+                logger.warning("AVISO: TABELA 'audit_summaries' NAO ENCONTRADA NO SUPABASE")
+                logger.warning("Para corrigir, execute este SQL no Painel do Supabase:")
+                logger.warning(
+                    "CREATE TABLE public.audit_summaries ("
+                    " id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),"
+                    " created_at timestamptz DEFAULT now(),"
+                    " compulab_total double precision,"
+                    " simus_total double precision,"
+                    " missing_exams_count integer,"
+                    " divergences_count integer,"
+                    " missing_patients_count integer,"
+                    " ai_summary text"
+                    " );"
+                    " ALTER TABLE public.audit_summaries ENABLE ROW LEVEL SECURITY;"
+                    " CREATE POLICY \"Permitir acesso publico\" ON public.audit_summaries FOR ALL USING (true);"
+                )
             else:
-                print(f"Erro ao salvar resumo de auditoria: {e}")
+                logger.error(f"Erro ao salvar resumo de auditoria: {e}")
             return {}
 
     @staticmethod
@@ -63,7 +66,7 @@ class AuditService:
             response = query.order("created_at", desc=True).limit(limit).execute()
             return response.data
         except Exception as e:
-            print(f"Erro ao buscar histórico de auditoria: {e}")
+            logger.error(f"Erro ao buscar historico de auditoria: {e}")
             return []
 
     @staticmethod
@@ -80,7 +83,7 @@ class AuditService:
 
             return response.data[0] if response.data else None
         except Exception as e:
-            print(f"Erro ao buscar último resumo: {e}")
+            logger.error(f"Erro ao buscar ultimo resumo: {e}")
             return None
 
     @staticmethod
@@ -97,7 +100,7 @@ class AuditService:
             response = query.order("created_at", desc=True).execute()
             return response.data
         except Exception as e:
-            print(f"Erro ao buscar histórico do paciente {patient_name}: {e}")
+            logger.error(f"Erro ao buscar historico do paciente {patient_name}: {e}")
             return []
 
     @staticmethod
@@ -119,7 +122,7 @@ class AuditService:
             ).execute()
             return response.data[0] if response.data else {}
         except Exception as e:
-            print(f"Erro ao salvar resolução: {e}")
+            logger.error(f"Erro ao salvar resolucao: {e}")
             return {}
 
     @staticmethod
@@ -137,22 +140,22 @@ class AuditService:
         except Exception as e:
             err_msg = str(e)
             if "PGRST205" in err_msg or "patient_history" in err_msg:
-                print("--- AVISO: TABELA 'patient_history' NÃO ENCONTRADA NO SUPABASE ---")
-                print("Para corrigir, execute este SQL no Painel do Supabase:")
-                print("""
-                CREATE TABLE public.patient_history (
-                    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    created_at timestamptz DEFAULT now(),
-                    patient_name text NOT NULL,
-                    exam_name text NOT NULL,
-                    status text,
-                    last_value double precision,
-                    notes text,
-                    UNIQUE(patient_name, exam_name)
-                );
-                ALTER TABLE public.patient_history ENABLE ROW LEVEL SECURITY;
-                CREATE POLICY "Permitir acesso público" ON public.patient_history FOR ALL USING (true);
-                """)
+                logger.warning("AVISO: TABELA 'patient_history' NAO ENCONTRADA NO SUPABASE")
+                logger.warning("Para corrigir, execute este SQL no Painel do Supabase:")
+                logger.warning(
+                    "CREATE TABLE public.patient_history ("
+                    " id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),"
+                    " created_at timestamptz DEFAULT now(),"
+                    " patient_name text NOT NULL,"
+                    " exam_name text NOT NULL,"
+                    " status text,"
+                    " last_value double precision,"
+                    " notes text,"
+                    " UNIQUE(patient_name, exam_name)"
+                    " );"
+                    " ALTER TABLE public.patient_history ENABLE ROW LEVEL SECURITY;"
+                    " CREATE POLICY \"Permitir acesso publico\" ON public.patient_history FOR ALL USING (true);"
+                )
             else:
-                print(f"Erro ao buscar resoluções: {e}")
+                logger.error(f"Erro ao buscar resolucoes: {e}")
             return {}

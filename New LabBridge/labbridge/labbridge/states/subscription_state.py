@@ -5,7 +5,10 @@ Gerencia planos e pagamentos com Stripe.
 import reflex as rx
 from typing import Optional
 from datetime import datetime
+import logging
 from .auth_state import AuthState
+
+logger = logging.getLogger(__name__)
 
 
 class SubscriptionState(AuthState):
@@ -169,7 +172,7 @@ class SubscriptionState(AuthState):
                 verified_plan = session.metadata.get("plan", plan or "starter")
                 self.current_plan = verified_plan
             except Exception as e:
-                print(f"Erro ao verificar sessao Stripe: {e}")
+                logger.error(f"Erro ao verificar sessao Stripe: {e}")
                 # Fallback: aceitar o parametro com warning
                 self.current_plan = plan or "starter"
         else:
@@ -233,7 +236,7 @@ class SubscriptionState(AuthState):
             '''
             
             # TODO: enviar email_service.send() para admin com conteudo enterprise
-            print(f"Solicitacao Enterprise: {self.enterprise_name} - {self.enterprise_company}")
+            logger.info(f"Solicitacao Enterprise: {self.enterprise_name} - {self.enterprise_company}")
             
             import asyncio
             await asyncio.sleep(1)

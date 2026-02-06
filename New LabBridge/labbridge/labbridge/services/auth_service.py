@@ -6,6 +6,9 @@ Com fallback para login local via .env
 from typing import Dict, Any, Optional, Tuple
 from .supabase_client import supabase
 from ..config import Config
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AuthService:
@@ -17,8 +20,10 @@ class AuthService:
     def _try_local_login(self, email: str, password: str) -> Tuple[bool, Dict[str, Any], str]:
         """
         Tenta login local usando credenciais do .env
-        Útil para desenvolvimento ou quando Supabase não está configurado
+        Apenas para desenvolvimento - desabilitado em producao
         """
+        if Config.IS_PRODUCTION:
+            return False, {}, ""
         if Config.AUTH_EMAIL and Config.AUTH_PASSWORD:
             if email == Config.AUTH_EMAIL and password == Config.AUTH_PASSWORD:
                 return True, {
@@ -161,7 +166,7 @@ class AuthService:
             self.client.auth.sign_out()
             return True
         except Exception as e:
-            print(f"Erro no logout: {e}")
+            logger.error(f"Erro no logout: {e}")
             return True  # Considera sucesso mesmo com erro
 
     def refresh_session(self) -> bool:
@@ -189,7 +194,7 @@ class AuthService:
 
             return response.data
         except Exception as e:
-            print(f"Erro ao carregar profile: {e}")
+            logger.error(f"Erro ao carregar profile: {e}")
             return None
 
     def _load_tenant(self, tenant_id: str) -> Optional[Dict[str, Any]]:
@@ -206,7 +211,7 @@ class AuthService:
 
             return response.data
         except Exception as e:
-            print(f"Erro ao carregar tenant: {e}")
+            logger.error(f"Erro ao carregar tenant: {e}")
             return None
 
     def update_profile(self, user_id: str, data: Dict[str, Any]) -> bool:
@@ -221,7 +226,7 @@ class AuthService:
                 .execute()
             return True
         except Exception as e:
-            print(f"Erro ao atualizar profile: {e}")
+            logger.error(f"Erro ao atualizar profile: {e}")
             return False
 
     def update_tenant(self, tenant_id: str, data: Dict[str, Any]) -> bool:
@@ -236,7 +241,7 @@ class AuthService:
                 .execute()
             return True
         except Exception as e:
-            print(f"Erro ao atualizar tenant: {e}")
+            logger.error(f"Erro ao atualizar tenant: {e}")
             return False
 
     def request_password_reset(self, email: str) -> Tuple[bool, str]:
@@ -384,7 +389,7 @@ class AuthService:
                     "created_at": str(response.user.created_at) if response.user.created_at else ""
                 }
         except Exception as e:
-            print(f"Erro ao obter usuário: {e}")
+            logger.error(f"Erro ao obter usuario: {e}")
         
         return None
 
@@ -445,7 +450,7 @@ class AuthService:
                 }
                 
         except Exception as e:
-            print(f"Erro ao criar perfil OAuth: {e}")
+            logger.error(f"Erro ao criar perfil OAuth: {e}")
             
         return {"tenant_id": "dev-tenant", "role": "member"}
 

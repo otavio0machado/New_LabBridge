@@ -4,6 +4,9 @@ Gerencia a persistência de logs de auditoria no Supabase seguindo o padrão Rep
 """
 from typing import Dict, Any, List
 from ..services.supabase_client import supabase
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AuditRepository:
     table_name = "data_audits"
@@ -21,7 +24,7 @@ class AuditRepository:
             response = supabase.table(AuditRepository.table_name).insert(data).execute()
             return response.data[0] if response.data else {}
         except Exception as e:
-            print(f"Error creating audit log: {e}")
+            logger.error(f"Error creating audit log: {e}")
             return {}
 
     @staticmethod
@@ -38,5 +41,5 @@ class AuditRepository:
                 .execute()
             return response.data
         except Exception as e:
-            print(f"Error fetching logs: {e}")
+            logger.error(f"Error fetching logs: {e}")
             return []

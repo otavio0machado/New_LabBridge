@@ -6,7 +6,10 @@ import reflex as rx
 from typing import List, Dict, Any
 from datetime import datetime
 import base64
+import logging
 from .auth_state import AuthState
+
+logger = logging.getLogger(__name__)
 
 
 class ReportsState(AuthState):
@@ -72,7 +75,7 @@ class ReportsState(AuthState):
             analyses = local_storage.get_saved_analyses(tenant_id, limit=500)
             return analyses
         except Exception as e:
-            print(f"Erro ao buscar análises: {e}")
+            logger.error(f"Erro ao buscar analises: {e}")
             return []
 
     async def export_all_pdf(self):
@@ -116,7 +119,7 @@ class ReportsState(AuthState):
 
         except Exception as e:
             self.is_exporting = False
-            print(f"Erro ao exportar PDF: {e}")
+            logger.error(f"Erro ao exportar PDF: {e}")
             yield rx.toast.error(f"Erro: {str(e)}")
 
     async def export_all_csv(self):
@@ -160,7 +163,7 @@ class ReportsState(AuthState):
 
         except Exception as e:
             self.is_exporting = False
-            print(f"Erro ao exportar CSV: {e}")
+            logger.error(f"Erro ao exportar CSV: {e}")
             yield rx.toast.error(f"Erro: {str(e)}")
 
     async def export_all_excel(self):
@@ -204,7 +207,7 @@ class ReportsState(AuthState):
 
         except Exception as e:
             self.is_exporting = False
-            print(f"Erro ao exportar Excel: {e}")
+            logger.error(f"Erro ao exportar Excel: {e}")
             yield rx.toast.error(f"Erro: {str(e)}")
 
     @rx.var
