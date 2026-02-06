@@ -8,23 +8,13 @@ echo "PORT externo: $PORT"
 echo "Backend interno: 8000"
 
 # Gerar nginx.conf a partir do template com o PORT correto
-# Apenas substitui $PORT (preserva outras vars do nginx como $http_upgrade)
 envsubst '${PORT}' < /app/nginx.conf.template > /etc/nginx/nginx.conf
 echo "nginx.conf gerado com porta $PORT"
 
-# Iniciar Reflex backend em background
-echo "Iniciando Reflex backend..."
-reflex run --env prod --backend-only --backend-port 8000 &
+# Iniciar Reflex em modo producao (serve frontend + backend)
+echo "Iniciando Reflex (frontend + backend)..."
+reflex run --env prod --backend-port 8000 &
 REFLEX_PID=$!
-
-# Debug: Verificar estrutura do build
-echo "=== Verificando build frontend ==="
-if [ -d "/app/.web/build/client" ]; then
-    echo "Build frontend encontrado."
-    ls -F /app/.web/build/client | head -n 20
-else
-    echo "AVISO: Build frontend nao encontrado em /app/.web/build/client"
-fi
 
 # Aguardar backend estar pronto (maximo 120 segundos)
 echo "Aguardando backend (porta 8000)..."
@@ -40,7 +30,7 @@ for i in $(seq 1 120); do
     sleep 1
 done
 
-# Iniciar Nginx em foreground
+# Iniciar Nginx
 echo "Iniciando Nginx na porta $PORT..."
 nginx -g "daemon off;" &
 NGINX_PID=$!
