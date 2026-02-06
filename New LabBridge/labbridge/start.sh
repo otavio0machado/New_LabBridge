@@ -11,10 +11,23 @@ echo "Backend interno: 8000"
 envsubst '${PORT}' < /app/nginx.conf.template > /etc/nginx/nginx.conf
 echo "nginx.conf gerado com porta $PORT"
 
-# Iniciar Reflex em modo producao (serve frontend + backend)
-echo "Iniciando Reflex (frontend + backend)..."
-reflex run --env prod --backend-port 8000 &
+# Iniciar Reflex backend em background (frontend ja foi pre-compilado no Docker build)
+echo "Iniciando Reflex backend..."
+reflex run --env prod --backend-only --backend-port 8000 &
 REFLEX_PID=$!
+
+# Debug: listar TODOS os arquivos do build para diagnostico
+echo "=== Arquivos do build frontend ==="
+if [ -d "/app/.web/build/client" ]; then
+    echo "Build encontrado. Arquivos HTML:"
+    find /app/.web/build/client -name "*.html" -type f | sort
+    echo "---"
+    echo "Total de arquivos:"
+    find /app/.web/build/client -type f | wc -l
+else
+    echo "ERRO: Build frontend NAO encontrado!"
+    ls -la /app/.web/ 2>/dev/null || echo "/app/.web/ nao existe"
+fi
 
 # Aguardar backend estar pronto (maximo 120 segundos)
 echo "Aguardando backend (porta 8000)..."

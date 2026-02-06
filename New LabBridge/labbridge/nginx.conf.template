@@ -3,6 +3,30 @@ events {
 }
 
 http {
+    # MIME types para servir arquivos estaticos corretamente
+    types {
+        text/html                             html htm shtml;
+        text/css                              css;
+        text/xml                              xml;
+        image/gif                             gif;
+        image/jpeg                            jpeg jpg;
+        application/javascript                js mjs;
+        application/json                      json;
+        application/wasm                      wasm;
+        text/plain                            txt;
+        image/png                             png;
+        image/svg+xml                         svg svgz;
+        image/webp                            webp;
+        image/x-icon                          ico;
+        font/woff                             woff;
+        font/woff2                            woff2;
+        font/ttf                              ttf;
+        font/otf                              otf;
+        application/octet-stream              bin exe dll;
+    }
+
+    default_type application/octet-stream;
+
     client_max_body_size 100M;
     proxy_read_timeout 86400;
     proxy_connect_timeout 300;
@@ -23,19 +47,55 @@ http {
             add_header Content-Type text/plain;
         }
 
-        # Tudo vai para o Reflex - ele serve frontend + backend
-        location / {
+        # WebSocket endpoint
+        location /_event {
             proxy_pass http://127.0.0.1:8000;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Connection "upgrade";
             proxy_set_header Host $host;
             proxy_set_header X-Forwarded-Proto https;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_read_timeout 86400;
             proxy_buffering off;
+        }
+
+        # Upload endpoint
+        location /_upload {
+            proxy_pass http://127.0.0.1:8000;
             client_max_body_size 100M;
+            proxy_read_timeout 600;
+        }
+
+        # Backend API
+        location /api {
+            proxy_pass http://127.0.0.1:8000;
+        }
+
+        location /ping {
+            proxy_pass http://127.0.0.1:8000;
+        }
+
+        location /_backend {
+            proxy_pass http://127.0.0.1:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+
+        # Frontend - arquivos estaticos gerados pelo Reflex
+        # Ordem: arquivo exato -> arquivo.html -> SPA fallback
+        location / {
+            root /app/.web/build/client;
+            try_files $uri $uri.html /__spa-fallback.html;
+            add_header Cache-Control "public, max-age=3600";
+        }
+
+        # Assets com cache longo
+        location /assets/ {
+            root /app/.web/build/client;
+            expires 1y;
+            access_log off;
+            add_header Cache-Control "public, immutable";
         }
     }
 }
