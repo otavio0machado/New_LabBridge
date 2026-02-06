@@ -85,7 +85,7 @@ http {
         # Frontend (static files)
         location / {
             root /app/.web/build/client;
-            try_files $uri $uri/ $uri.html /__spa-fallback.html;
+            try_files $uri $uri.html /__spa-fallback.html;
             add_header Cache-Control "public, max-age=3600";
         }
 
