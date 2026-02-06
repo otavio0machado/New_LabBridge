@@ -125,7 +125,7 @@ def register_form() -> rx.Component:
                 ui.form_field(
                     "Nome do Laboratorio",
                     ui.input(
-                        placeholder="Biodiagnostico Ltda",
+                        placeholder="Laboratorio Exemplo Ltda",
                         value=State.register_lab_name,
                         on_change=State.set_register_lab_name,
                         size="large",
@@ -144,7 +144,7 @@ def register_form() -> rx.Component:
                 ui.form_field(
                     "Senha",
                     ui.input(
-                        placeholder="Minimo 6 caracteres",
+                        placeholder="Minimo 8 caracteres",
                         value=State.register_password,
                         on_change=State.set_register_password,
                         type="password",

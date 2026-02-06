@@ -1,6 +1,6 @@
 """
 AI Analysis utilities using OpenAI
-Laboratório Biodiagnóstico
+LabBridge
 FORENSIC AUDIT ENGINE v3.0 - Structured Report Generation
 """
 from datetime import datetime
@@ -487,7 +487,7 @@ async def generate_ai_analysis(
 Você é um Engenheiro de Dados Sênior e Auditor Forense Digital, especialista em sistemas de saúde e conciliação financeira para fins judiciais.
 
 # CONTEXTO
-Estamos auditando o Laboratório Biodiagnóstico. O sistema interno (COMPULAB) registra valores a receber superiores aos pagos pelo SUS (SIMUS). Precisamos provar a origem dessa diferença para uso em processo judicial.
+Estamos auditando o laboratório. O sistema interno (COMPULAB) registra valores a receber superiores aos pagos pelo SUS (SIMUS). Precisamos provar a origem dessa diferença para uso em processo judicial.
 
 # DADOS
 Você receberá APENAS exames que apresentaram alguma divergência (valor, ausência ou código). Exames conciliados já foram removidos.
@@ -727,7 +727,7 @@ Com base nos dados analisados, a diferença de **{format_currency_br(gap_finance
 
 ---
 
-*Este relatório foi gerado automaticamente pelo Forensic Audit Engine v3.0 - Biodiagnóstico.*
+*Este relatório foi gerado automaticamente pelo Forensic Audit Engine v3.0 - LabBridge.*
 *Para uso em processos judiciais, os dados originais devem ser preservados como prova digital.*
 """
         

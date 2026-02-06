@@ -1,6 +1,6 @@
 """
 Comparison Engine for COMPULAB vs SIMUS Analysis
-Laboratório Biodiagnóstico
+LabBridge
 v2.0 - Robust, Deterministic Results for Judicial Use
 """
 import json

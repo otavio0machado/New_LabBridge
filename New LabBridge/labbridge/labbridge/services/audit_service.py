@@ -1,6 +1,6 @@
 """
 Serviço de Histórico de Auditorias
-Laboratório Biodiagnóstico
+LabBridge
 """
 import logging
 from typing import List, Optional, Dict, Any

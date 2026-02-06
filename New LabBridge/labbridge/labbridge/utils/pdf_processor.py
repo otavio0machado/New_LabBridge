@@ -1,6 +1,6 @@
 """
 PDF Processing utilities for COMPULAB and SIMUS files
-Laboratório Biodiagnóstico
+LabBridge
 
 Otimizado para arquivos grandes (12MB+):
 - Processamento em chunks

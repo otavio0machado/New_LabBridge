@@ -1,4 +1,4 @@
-# Utils package for Biodiagnóstico App
+# Utils package for LabBridge
 from .pdf_processor import (
     parse_currency_value,
     normalize_name,

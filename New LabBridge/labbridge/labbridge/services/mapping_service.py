@@ -1,6 +1,6 @@
 """
 Servico de Mapeamento de Exames
-Laboratorio Biodiagnostico
+LabBridge
 """
 import json
 import logging

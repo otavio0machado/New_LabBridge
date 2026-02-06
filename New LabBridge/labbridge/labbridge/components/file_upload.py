@@ -1,5 +1,5 @@
 """
-File upload components for Biodiagnóstico App
+File upload components for LabBridge
 Enhanced with drag-and-drop animations, validation, and better UX
 (PURIFICADA)
 """

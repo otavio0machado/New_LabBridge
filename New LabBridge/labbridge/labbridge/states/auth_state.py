@@ -244,8 +244,8 @@ class AuthState(rx.State):
             self.register_error = "Informe uma senha"
             return
 
-        if len(self.register_password) < 6:
-            self.register_error = "Senha deve ter pelo menos 6 caracteres"
+        if len(self.register_password) < 8:
+            self.register_error = "Senha deve ter pelo menos 8 caracteres"
             return
 
         if self.register_password != self.register_confirm_password:

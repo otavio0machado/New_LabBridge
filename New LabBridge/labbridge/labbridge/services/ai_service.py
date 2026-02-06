@@ -1,5 +1,5 @@
 """
-Serviço Unificado de IA - Biodiagnóstico App
+Serviço Unificado de IA - LabBridge
 Suporta OpenAI e Gemini com retry automático e JSON mode.
 
 Segue as diretrizes da skill "O Oráculo":

@@ -1,5 +1,5 @@
 """
-Biodiagnóstico Lab - Sistema de Administração
+LabBridge - Sistema de Auditoria & Inteligencia Laboratorial
 Design oficial baseado na identidade visual do laboratório
 """
 import logging

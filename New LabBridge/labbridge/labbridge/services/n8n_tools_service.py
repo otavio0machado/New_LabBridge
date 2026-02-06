@@ -111,10 +111,10 @@ Aguardamos manifestação.
 Atenciosamente,
 
 _________________________________
-Laboratório Biodiagnóstico
+[Nome do Laboratório]
 Setor de Faturamento
-Telefone: (XX) XXXX-XXXX
-Email: faturamento@biodiagnostico.com.br
+Telefone: [Telefone]
+Email: [Email]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """

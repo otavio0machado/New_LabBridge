@@ -49,7 +49,7 @@ class CloudinaryService:
             response = cloudinary.uploader.upload_large(
                 file_path,
                 resource_type=resource_type,
-                folder="biodiagnostico_uploads",
+                folder="labbridge_uploads",
                 chunk_size=6000000,  # 6MB chunks
                 flags="attachment:false",  # Permite visualização inline
             )
@@ -80,7 +80,7 @@ class CloudinaryService:
             response = cloudinary.uploader.upload_large(
                 file_path,
                 resource_type="image",  # image permite preview de PDFs
-                folder="biodiagnostico_pdfs",
+                folder="labbridge_pdfs",
                 format="pdf",
                 chunk_size=6000000,
             )

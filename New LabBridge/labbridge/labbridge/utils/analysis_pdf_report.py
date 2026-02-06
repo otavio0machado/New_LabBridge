@@ -1,6 +1,6 @@
 """
 Gerador de Relatório PDF para Análise de Diferenças
-Laboratório Biodiagnóstico
+LabBridge
 """
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors

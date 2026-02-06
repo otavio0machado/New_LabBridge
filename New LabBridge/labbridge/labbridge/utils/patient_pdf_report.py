@@ -1,6 +1,6 @@
 """
 Função para gerar PDF do histórico do paciente
-Laboratório Biodiagnóstico
+LabBridge
 """
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
