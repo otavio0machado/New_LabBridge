@@ -212,20 +212,41 @@ class LocalStorage:
             )
         """)
 
+        # Tabela de resoluções de divergências (persistência)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS divergence_resolutions (
+                id TEXT PRIMARY KEY,
+                tenant_id TEXT DEFAULT 'local',
+                analysis_id TEXT DEFAULT '',
+                patient_name TEXT NOT NULL,
+                exam_name TEXT NOT NULL DEFAULT '',
+                resolution_status TEXT NOT NULL DEFAULT '',
+                annotation TEXT DEFAULT '',
+                notes TEXT DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(tenant_id, analysis_id, patient_name, exam_name)
+            )
+        """)
+
+        # Tabela de mensagens do chat (persistência do Detective)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id TEXT PRIMARY KEY,
+                tenant_id TEXT DEFAULT 'local',
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+        """)
+
         self._conn.commit()
-    
+
     def _seed_initial_data(self):
-        """Insere dados iniciais se o banco estiver vazio"""
-        cursor = self._conn.cursor()
-        
-        # Verificar se já tem dados
-        cursor.execute("SELECT COUNT(*) FROM team_members")
-        if cursor.fetchone()[0] == 0:
-            self._seed_team_members()
-        
-        cursor.execute("SELECT COUNT(*) FROM integrations")
-        if cursor.fetchone()[0] == 0:
-            self._seed_integrations()
+        """Não insere mais dados de demonstração em produção."""
+        # Removido: seed de membros e integrações falsos
+        # Em produção, dados são criados pelo fluxo real de cadastro
+        pass
     
     def _seed_team_members(self):
         """Insere membros iniciais da equipe"""
@@ -1081,6 +1102,112 @@ class LocalStorage:
             return True, ""
         except Exception as e:
             return False, f"Erro ao salvar configurações: {str(e)}"
+
+    # =========================================================================
+    # DIVERGENCE RESOLUTIONS CRUD
+    # =========================================================================
+
+    def save_resolution(
+        self,
+        tenant_id: str,
+        analysis_id: str,
+        patient_name: str,
+        exam_name: str,
+        resolution_status: str,
+        annotation: str = "",
+        notes: str = "",
+    ) -> bool:
+        """Salva ou atualiza uma resolução de divergência"""
+        try:
+            now = datetime.utcnow().isoformat()
+            res_id = str(int(datetime.utcnow().timestamp() * 1000))
+            cursor = self._conn.cursor()
+            cursor.execute("""
+                INSERT INTO divergence_resolutions
+                    (id, tenant_id, analysis_id, patient_name, exam_name, resolution_status, annotation, notes, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(tenant_id, analysis_id, patient_name, exam_name)
+                DO UPDATE SET
+                    resolution_status = excluded.resolution_status,
+                    annotation = excluded.annotation,
+                    notes = excluded.notes,
+                    updated_at = excluded.updated_at
+            """, (res_id, tenant_id, analysis_id, patient_name, exam_name, resolution_status, annotation, notes, now, now))
+            self._conn.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Erro ao salvar resolução: {e}")
+            return False
+
+    def get_resolutions(self, tenant_id: str, analysis_id: str = "") -> Dict[str, Dict[str, str]]:
+        """Carrega resoluções como dict {patient|exam: {status, annotation}}"""
+        try:
+            cursor = self._conn.cursor()
+            if analysis_id:
+                cursor.execute(
+                    "SELECT patient_name, exam_name, resolution_status, annotation FROM divergence_resolutions WHERE tenant_id = ? AND analysis_id = ?",
+                    (tenant_id, analysis_id)
+                )
+            else:
+                cursor.execute(
+                    "SELECT patient_name, exam_name, resolution_status, annotation FROM divergence_resolutions WHERE tenant_id = ?",
+                    (tenant_id,)
+                )
+            result = {}
+            for row in cursor.fetchall():
+                key = f"{row['patient_name']}|{row['exam_name']}"
+                result[key] = {
+                    "status": row["resolution_status"],
+                    "annotation": row["annotation"],
+                }
+            return result
+        except Exception as e:
+            logger.error(f"Erro ao carregar resoluções: {e}")
+            return {}
+
+    # =========================================================================
+    # CHAT MESSAGES CRUD (Detective persistence)
+    # =========================================================================
+
+    def save_chat_message(self, tenant_id: str, role: str, content: str) -> bool:
+        """Salva uma mensagem do chat"""
+        try:
+            msg_id = str(int(datetime.utcnow().timestamp() * 1000))
+            now = datetime.utcnow().isoformat()
+            cursor = self._conn.cursor()
+            cursor.execute("""
+                INSERT INTO chat_messages (id, tenant_id, role, content, created_at)
+                VALUES (?, ?, ?, ?, ?)
+            """, (msg_id, tenant_id, role, content, now))
+            self._conn.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Erro ao salvar mensagem do chat: {e}")
+            return False
+
+    def get_chat_messages(self, tenant_id: str, limit: int = 50) -> List[Dict[str, str]]:
+        """Carrega mensagens do chat"""
+        try:
+            cursor = self._conn.cursor()
+            cursor.execute(
+                "SELECT role, content, created_at FROM chat_messages WHERE tenant_id = ? ORDER BY created_at ASC LIMIT ?",
+                (tenant_id, limit)
+            )
+            return [{"role": row["role"], "content": row["content"]} for row in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"Erro ao carregar mensagens do chat: {e}")
+            return []
+
+    def clear_chat_messages(self, tenant_id: str) -> bool:
+        """Limpa mensagens do chat"""
+        try:
+            cursor = self._conn.cursor()
+            cursor.execute("DELETE FROM chat_messages WHERE tenant_id = ?", (tenant_id,))
+            self._conn.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Erro ao limpar mensagens do chat: {e}")
+            return False
 
     # =========================================================================
     # ACTIVITY LOGS CRUD

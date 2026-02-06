@@ -809,53 +809,91 @@ class AnalysisState(AuthState):
                 resolved_count += 1
         return int((resolved_count / total) * 100)
 
-    def view_patient_history(self, patient_name: str):
-        """Mock: Carrega histórico do paciente com dados formatados corretamente"""
+    async def view_patient_history(self, patient_name: str):
+        """Carrega histórico real do paciente a partir do banco de dados"""
         self.selected_patient_name = patient_name
         self.is_showing_patient_history = True
-        
-        # Simular busca no banco com os campos corretos do model PatientHistoryEntry
-        self.patient_history_data = [
-            PatientHistoryEntry(
-                id="PAT-10892", 
-                patient_name=patient_name,
-                exam_name="HEMOGRAMA COMPLETO", 
-                status="Divergente",
-                last_value=45.90, 
-                notes="Diferença de arredondamento em glóbulos brancos",
-                created_at="21/01/2026"
-            ),
-            PatientHistoryEntry(
-                id="PAT-10850", 
-                patient_name=patient_name,
-                exam_name="GLICEMIA EM JEJUM", 
-                status="Normal",
-                last_value=22.40, 
-                notes="",
-                created_at="15/01/2026"
-            ),
-            PatientHistoryEntry(
-                id="PAT-10700", 
-                patient_name=patient_name,
-                exam_name="CREATININA", 
-                status="Normal",
-                last_value=12.00, 
-                notes="",
-                created_at="10/12/2025"
-            )
-        ]
+        self.patient_history_data = []
+        yield
+
+        try:
+            tenant_id = self.current_tenant.id if self.current_tenant else "local"
+
+            # Tentar buscar do Supabase primeiro
+            from ..services.audit_service import AuditService
+            audit_service = AuditService()
+            history = audit_service.get_patient_history(patient_name, tenant_id)
+
+            if history:
+                self.patient_history_data = [
+                    PatientHistoryEntry(
+                        id=str(item.get("id", ""))[:12],
+                        patient_name=patient_name,
+                        exam_name=item.get("exam_name", ""),
+                        status=item.get("status", "Normal"),
+                        last_value=float(item.get("last_value", 0) or 0),
+                        notes=item.get("notes", ""),
+                        created_at=str(item.get("created_at", ""))[:10]
+                    )
+                    for item in history
+                ]
+            else:
+                # Buscar nos itens da análise atual como fallback
+                entries = []
+                all_items = (
+                    self.patients_only_compulab + self.exams_only_compulab +
+                    self.value_divergences + self.exams_only_simus
+                )
+                for item in all_items:
+                    p = item.get("patient", "") if isinstance(item, dict) else getattr(item, "patient", "")
+                    if p == patient_name:
+                        exam = item.get("exam_name", "") if isinstance(item, dict) else getattr(item, "exam_name", "")
+                        val = item.get("value", 0) if isinstance(item, dict) else getattr(item, "value", 0)
+                        key = f"{patient_name}|{exam}"
+                        status = "Resolvido" if self.resolutions.get(key) == "resolvido" else "Divergente"
+                        entries.append(PatientHistoryEntry(
+                            id=f"CURR-{len(entries)+1}",
+                            patient_name=patient_name,
+                            exam_name=exam,
+                            status=status,
+                            last_value=float(val or 0),
+                            notes=self.annotations.get(key, ""),
+                            created_at=datetime.now().strftime("%d/%m/%Y")
+                        ))
+                self.patient_history_data = entries
+
+        except Exception as e:
+            logger.error(f"Erro ao carregar histórico do paciente: {e}")
+            # Sem dados para exibir - UI mostrará lista vazia
 
     async def toggle_resolution(self, patient: str, exam: str):
-        """Marca/Desmarca item como resolvido e atualiza PDF"""
+        """Marca/Desmarca item como resolvido, persiste no banco e atualiza PDF"""
         key = f"{patient}|{exam}"
         current = self.resolutions.get(key, "")
-        self.resolutions[key] = "resolvido" if current != "resolvido" else ""
+        new_status = "resolvido" if current != "resolvido" else ""
+        self.resolutions[key] = new_status
         yield
+
+        # Persistir no banco de dados
+        try:
+            from ..services.local_storage import local_storage
+            tenant_id = self.current_tenant.id if self.current_tenant else "local"
+            local_storage.save_resolution(
+                tenant_id=tenant_id,
+                analysis_id=self.selected_saved_analysis_id or "",
+                patient_name=patient,
+                exam_name=exam,
+                resolution_status=new_status,
+                annotation=self.annotations.get(key, ""),
+            )
+        except Exception as e:
+            logger.error(f"Erro ao persistir resolução: {e}")
+
         # Regenerar PDF para refletir mudanças
         await self.generate_pdf_report()
-    
+
     async def set_annotation(self, patient: str, exam: str, error_type: str):
-        """Atualiza anotação de um item e reflete na UI/PDF."""
+        """Atualiza anotação de um item, persiste no banco e reflete na UI/PDF."""
         key = f"{patient}|{exam}"
         if error_type and error_type not in self.ERROR_TYPES:
             return
@@ -864,7 +902,23 @@ class AnalysisState(AuthState):
         else:
             self.annotations.pop(key, None)
         yield
-        # Regenerar PDF para refletir mudançãs de anotação
+
+        # Persistir no banco de dados
+        try:
+            from ..services.local_storage import local_storage
+            tenant_id = self.current_tenant.id if self.current_tenant else "local"
+            local_storage.save_resolution(
+                tenant_id=tenant_id,
+                analysis_id=self.selected_saved_analysis_id or "",
+                patient_name=patient,
+                exam_name=exam,
+                resolution_status=self.resolutions.get(key, ""),
+                annotation=error_type or "",
+            )
+        except Exception as e:
+            logger.error(f"Erro ao persistir anotação: {e}")
+
+        # Regenerar PDF para refletir mudanças de anotação
         await self.generate_pdf_report()
 
     async def run_analysis(self):
@@ -1441,6 +1495,11 @@ class AnalysisState(AuthState):
 
     async def handle_compulab_upload(self, files: List[rx.UploadFile]):
         """Processa upload do arquivo COMPULAB - Salva em disco para evitar travamento"""
+        # Auth check: rejeitar uploads de usuários não autenticados
+        if not self.is_authenticated:
+            self.error_message = "Você precisa estar autenticado para enviar arquivos."
+            return
+
         logger.debug(f"Iniciando upload COMPULAB. Files: {len(files) if files else 0}")
         if not files:
             logger.debug("Nenhum arquivo recebido")
@@ -1555,6 +1614,11 @@ class AnalysisState(AuthState):
     
     async def handle_simus_upload(self, files: List[rx.UploadFile]):
         """Processa upload do arquivo SIMUS - Salva em disco para evitar travamento"""
+        # Auth check: rejeitar uploads de usuários não autenticados
+        if not self.is_authenticated:
+            self.error_message = "Você precisa estar autenticado para enviar arquivos."
+            return
+
         logger.debug(f"Iniciando upload SIMUS. Files: {len(files) if files else 0}")
         if not files:
             logger.debug("Nenhum arquivo recebido")
@@ -2089,13 +2153,25 @@ class AnalysisState(AuthState):
             
             self.selected_saved_analysis_id = analysis_id
             self.analysis_active_tab = "patients_only_compulab"
-            
+
+            # Carregar resoluções e anotações persistidas
+            try:
+                from ..services.local_storage import local_storage
+                tenant_id = self.current_tenant.id if self.current_tenant else "local"
+                saved_resolutions = local_storage.get_resolutions(tenant_id, analysis_id)
+                self.resolutions = {k: v["status"] for k, v in saved_resolutions.items() if v.get("status")}
+                self.annotations = {k: v["annotation"] for k, v in saved_resolutions.items() if v.get("annotation")}
+            except Exception as e:
+                logger.error(f"Erro ao carregar resoluções: {e}")
+                self.resolutions = {}
+                self.annotations = {}
+
             self.analysis_progress_percentage = 100
             self.analysis_stage = "Carregado!"
             self.success_message = f"Análise '{analysis.get('analysis_name', '')}' carregada com sucesso!"
-            
+
             yield
-            
+
             # Regenerar PDF preview
             await self.generate_pdf_report()
             

@@ -110,6 +110,33 @@ def conversor_page() -> rx.Component:
                 description="Transforme relatórios laboratoriais em dados estruturados",
             ),
 
+            # === ERROR BANNER ===
+            rx.cond(
+                State.error_message != "",
+                rx.box(
+                    rx.hstack(
+                        rx.icon(tag="triangle-alert", size=20, color=Color.ERROR),
+                        rx.text(State.error_message, color=Color.ERROR, font_weight="500", flex="1"),
+                        rx.icon(
+                            tag="x",
+                            size=16,
+                            color=Color.TEXT_SECONDARY,
+                            cursor="pointer",
+                            on_click=State.set_error_message(""),
+                        ),
+                        width="100%",
+                        align="center",
+                        spacing="3",
+                    ),
+                    bg=Color.ERROR_BG,
+                    border=f"1px solid {Color.ERROR}40",
+                    border_radius=Design.RADIUS_LG,
+                    padding=Spacing.MD,
+                    margin_bottom=Spacing.MD,
+                    width="100%",
+                ),
+            ),
+
             # Etapas
             rx.box(
                 rx.vstack(

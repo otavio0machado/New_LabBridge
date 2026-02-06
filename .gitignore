@@ -1,1 +1,44 @@
-/nul
+# Secrets
+.env
+*.env.local
+*.env.production
+*.key
+*.pem
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+nul
+
+# Build
+build/
+dist/
+node_modules/
+
+# Logs
+*.log
+*.pid
+
+# Reflex
+.web/
+.states/

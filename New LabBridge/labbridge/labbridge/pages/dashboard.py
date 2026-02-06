@@ -257,6 +257,79 @@ def dashboard_page() -> rx.Component:
                 ),
             ),
 
+            # === ONBOARDING BANNER (shown when no analyses exist) ===
+            rx.cond(
+                AnalysisState.saved_analyses_list.length() == 0,
+                rx.box(
+                    rx.hstack(
+                        rx.box(
+                            rx.icon(tag="rocket", size=32, color="white"),
+                            padding="16px",
+                            bg=Color.GRADIENT_PRIMARY,
+                            border_radius=Design.RADIUS_LG,
+                        ),
+                        rx.vstack(
+                            rx.text("Bem-vindo ao LabBridge!", font_weight="700", font_size="1.15rem", color=Color.DEEP),
+                            rx.text(
+                                "Comece sua primeira auditoria em 3 passos simples:",
+                                color=Color.TEXT_SECONDARY,
+                                font_size="0.95rem",
+                            ),
+                            rx.hstack(
+                                rx.hstack(
+                                    rx.badge("1", color_scheme="green", variant="solid", size="1"),
+                                    rx.text("Importe seus PDFs", font_size="0.875rem", color=Color.TEXT_PRIMARY),
+                                    spacing="2", align="center",
+                                ),
+                                rx.icon(tag="arrow-right", size=14, color=Color.TEXT_MUTED),
+                                rx.hstack(
+                                    rx.badge("2", color_scheme="green", variant="solid", size="1"),
+                                    rx.text("Execute a auditoria cruzada", font_size="0.875rem", color=Color.TEXT_PRIMARY),
+                                    spacing="2", align="center",
+                                ),
+                                rx.icon(tag="arrow-right", size=14, color=Color.TEXT_MUTED),
+                                rx.hstack(
+                                    rx.badge("3", color_scheme="green", variant="solid", size="1"),
+                                    rx.text("Visualize divergencias e exporte", font_size="0.875rem", color=Color.TEXT_PRIMARY),
+                                    spacing="2", align="center",
+                                ),
+                                spacing="3",
+                                flex_wrap="wrap",
+                                margin_top=Spacing.SM,
+                            ),
+                            spacing="2",
+                            align_items="start",
+                            flex="1",
+                        ),
+                        rx.spacer(),
+                        rx.button(
+                            rx.hstack(
+                                rx.icon(tag="play", size=16),
+                                rx.text("Iniciar Primeira Auditoria"),
+                                spacing="2",
+                            ),
+                            bg=Color.PRIMARY,
+                            color="white",
+                            border_radius=Design.RADIUS_MD,
+                            size="3",
+                            cursor="pointer",
+                            _hover={"bg": Color.PRIMARY_HOVER},
+                            on_click=State.navigate_to("analise"),
+                        ),
+                        width="100%",
+                        align="center",
+                        spacing="4",
+                        flex_wrap="wrap",
+                    ),
+                    bg=Color.SURFACE,
+                    border=f"2px solid {Color.PRIMARY}30",
+                    border_radius=Design.RADIUS_XL,
+                    padding=Spacing.LG,
+                    margin_bottom=Spacing.LG,
+                    width="100%",
+                ),
+            ),
+
             # KPI Cards Grid
             rx.grid(
                 kpi_card(

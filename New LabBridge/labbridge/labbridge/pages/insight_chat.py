@@ -207,7 +207,22 @@ def insight_chat_page() -> rx.Component:
             
             # Content Area - Chat centralizado
             rx.box(
-                rx.heading("💬 Chat de Insights", size="4", margin_bottom=Spacing.MD, color=Color.DEEP),
+                rx.hstack(
+                    rx.heading("💬 Chat de Insights", size="4", color=Color.DEEP),
+                    rx.spacer(),
+                    rx.button(
+                        rx.hstack(rx.icon(tag="trash-2", size=14), rx.text("Limpar Chat", font_size="0.8rem"), spacing="2"),
+                        variant="ghost",
+                        size="1",
+                        color=Color.TEXT_SECONDARY,
+                        cursor="pointer",
+                        on_click=State.clear_chat,
+                        _hover={"color": Color.ERROR},
+                    ),
+                    width="100%",
+                    align="center",
+                    margin_bottom=Spacing.MD,
+                ),
                 rx.vstack(
                     # Chat History Container
                     rx.scroll_area(

@@ -9,20 +9,37 @@ from ..styles import Color, Spacing, Design
 from .notification_bell import notification_bell
 
 # =============================================================================
-# NAVIGATION ITEMS - Ordem fixa conforme especificação
+# NAVIGATION ITEMS with RBAC - min_role defines minimum access level
+# Roles hierarchy: viewer < analyst/member < admin < owner
 # =============================================================================
-NAV_ITEMS = [
-    {"id": "dashboard", "label": "Dashboard", "icon": "layout-dashboard", "route": "/dashboard"},
-    {"id": "analise", "label": "Auditorias", "icon": "file-search", "route": "/analise"},
-    {"id": "conversor", "label": "Importador de Dados", "icon": "upload", "route": "/conversor"},
-    {"id": "reports", "label": "Relatórios", "icon": "file-bar-chart", "route": "/reports"},
-    {"id": "history", "label": "Histórico", "icon": "history", "route": "/history"},
-    {"id": "subscription", "label": "Assinaturas & Planos", "icon": "credit-card", "route": "/subscription"},
-    {"id": "team", "label": "Usuários & Permissões", "icon": "users", "route": "/team"},
-    {"id": "integrations", "label": "Integrações", "icon": "plug", "route": "/integrations"},
-    {"id": "help", "label": "Central de Ajuda", "icon": "circle-help", "route": "/help"},
-    {"id": "settings", "label": "Configurações", "icon": "settings", "route": "/settings"},
+NAV_ITEMS_ALL = [
+    {"id": "dashboard", "label": "Dashboard", "icon": "layout-dashboard", "route": "/dashboard", "min_role": "viewer"},
+    {"id": "analise", "label": "Auditorias", "icon": "file-search", "route": "/analise", "min_role": "analyst"},
+    {"id": "conversor", "label": "Importador de Dados", "icon": "upload", "route": "/conversor", "min_role": "analyst"},
+    {"id": "reports", "label": "Relatórios", "icon": "file-bar-chart", "route": "/reports", "min_role": "viewer"},
+    {"id": "history", "label": "Histórico", "icon": "history", "route": "/history", "min_role": "viewer"},
+    {"id": "subscription", "label": "Assinaturas & Planos", "icon": "credit-card", "route": "/subscription", "min_role": "admin"},
+    {"id": "team", "label": "Usuários & Permissões", "icon": "users", "route": "/team", "min_role": "admin"},
+    {"id": "integrations", "label": "Integrações", "icon": "plug", "route": "/integrations", "min_role": "admin"},
+    {"id": "help", "label": "Central de Ajuda", "icon": "circle-help", "route": "/help", "min_role": "viewer"},
+    {"id": "settings", "label": "Configurações", "icon": "settings", "route": "/settings", "min_role": "viewer"},
 ]
+
+_ROLE_LEVELS = {
+    "viewer": 0, "member": 1, "analyst": 1,
+    "admin_lab": 2, "admin": 2, "admin_global": 3, "owner": 4,
+}
+
+def _items_for_role(role: str) -> list:
+    """Filter nav items based on user role."""
+    user_level = _ROLE_LEVELS.get(role, 0)
+    return [
+        item for item in NAV_ITEMS_ALL
+        if _ROLE_LEVELS.get(item.get("min_role", "viewer"), 0) <= user_level
+    ]
+
+# Default: show all for backwards compatibility in static contexts
+NAV_ITEMS = NAV_ITEMS_ALL
 
 def sidebar_link(item: dict) -> rx.Component:
     """Link de navegação da sidebar com estados visuais claros"""
@@ -98,9 +115,22 @@ def sidebar() -> rx.Component:
                 width="100%",
             ),
 
-            # Navigation Items
+            # Navigation Items (RBAC: admin-only items hidden for viewers)
             rx.vstack(
-                *[sidebar_link(item) for item in NAV_ITEMS],
+                *[
+                    rx.cond(
+                        State.is_admin,
+                        sidebar_link(item),
+                        rx.fragment(),
+                    ) if item.get("min_role") == "admin" else
+                    rx.cond(
+                        State.is_analyst,
+                        sidebar_link(item),
+                        rx.fragment(),
+                    ) if item.get("min_role") == "analyst" else
+                    sidebar_link(item)
+                    for item in NAV_ITEMS_ALL
+                ],
                 spacing="1",
                 width="100%",
                 padding=Spacing.SM,
@@ -311,16 +341,22 @@ def mobile_nav_trigger() -> rx.Component:
         ),
         rx.menu.content(
             *[
-                rx.menu.item(
-                    rx.hstack(
-                        rx.icon(tag=item["icon"], size=18),
-                        rx.text(item["label"], font_size="0.9rem"),
-                        spacing="3",
+                rx.cond(
+                    State.is_admin if item.get("min_role") == "admin" else (
+                        State.is_analyst if item.get("min_role") == "analyst" else True
                     ),
-                    on_select=lambda i=item: State.navigate_to(i["id"]),
-                    padding="12px",
+                    rx.menu.item(
+                        rx.hstack(
+                            rx.icon(tag=item["icon"], size=18),
+                            rx.text(item["label"], font_size="0.9rem"),
+                            spacing="3",
+                        ),
+                        on_select=lambda i=item: State.navigate_to(i["id"]),
+                        padding="12px",
+                    ),
+                    rx.fragment(),
                 )
-                for item in NAV_ITEMS
+                for item in NAV_ITEMS_ALL
             ],
             rx.menu.separator(),
             rx.menu.item(

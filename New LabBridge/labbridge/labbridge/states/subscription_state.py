@@ -235,11 +235,20 @@ class SubscriptionState(AuthState):
             </ul>
             '''
             
-            # TODO: enviar email_service.send() para admin com conteudo enterprise
+            # Enviar email para admin com solicitação enterprise
+            try:
+                success = email_service.send_email(
+                    to_email="suporte@labbridge.com.br",
+                    subject=f"[Enterprise] Nova solicitação - {self.enterprise_company}",
+                    html_content=content,
+                    from_name="LabBridge Enterprise",
+                )
+                if not success:
+                    logger.warning("Email enterprise não enviado - serviço de email indisponível")
+            except Exception as email_err:
+                logger.error(f"Erro ao enviar email enterprise: {email_err}")
+
             logger.info(f"Solicitacao Enterprise: {self.enterprise_name} - {self.enterprise_company}")
-            
-            import asyncio
-            await asyncio.sleep(1)
 
             self.is_processing = False
             self.close_enterprise_modal()

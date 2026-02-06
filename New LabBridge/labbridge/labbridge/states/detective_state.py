@@ -48,6 +48,16 @@ class DetectiveState(AIState):
 
     def load_context(self):
         """Carrega os dados para o contexto da IA (Real se houver, ou Mock)."""
+        # Carregar mensagens persistidas do banco
+        try:
+            from ..services.local_storage import local_storage
+            tenant_id = self.current_tenant.id if self.current_tenant else "local"
+            saved_msgs = local_storage.get_chat_messages(tenant_id, limit=50)
+            if saved_msgs:
+                self.messages = saved_msgs
+        except Exception as e:
+            logger.debug(f"Erro ao carregar chat persistido: {e}")
+
         # Se houver divergências reais carregadas no AnalysisState
         if self.has_analysis:
             data_list = []
@@ -205,7 +215,29 @@ class DetectiveState(AIState):
         finally:
             self.is_loading = False
             self.thinking_steps = []
-            
+
+            # Persistir mensagens no banco
+            try:
+                from ..services.local_storage import local_storage
+                tenant_id = self.current_tenant.id if self.current_tenant else "local"
+                # Salvar as duas últimas mensagens (user + ai)
+                for msg in self.messages[-2:]:
+                    local_storage.save_chat_message(tenant_id, msg["role"], msg["content"])
+            except Exception as e:
+                logger.debug(f"Erro ao persistir chat: {e}")
+
+    def clear_chat(self):
+        """Limpa o histórico de chat e remove do banco."""
+        self.messages = [
+            {"role": "ai", "content": "🧬 **Bio IA** ao seu dispor!\n\nEstou analisando as divergências financeiras. Pergunte sobre glosas, convênios ou perdas financeiras."}
+        ]
+        try:
+            from ..services.local_storage import local_storage
+            tenant_id = self.current_tenant.id if self.current_tenant else "local"
+            local_storage.clear_chat_messages(tenant_id)
+        except Exception as e:
+            logger.debug(f"Erro ao limpar chat: {e}")
+
     def select_suggested_action(self, action: str):
         """Preenche o input com a ação sugerida e envia."""
         self.input_text = action

@@ -287,20 +287,79 @@ class SettingsState(AuthState):
         self.settings_success = False
 
     async def request_2fa_setup(self):
-        """Inicia configuracao de 2FA"""
-        if self.two_factor_enabled:
-            # Desabilitar 2FA
-            self.two_factor_enabled = False
-            return rx.toast.info("Autenticacao de dois fatores desabilitada")
-        else:
-            # Habilitar 2FA - em producao, mostraria QR code
-            self.two_factor_enabled = True
-            return rx.toast.success("Autenticacao de dois fatores habilitada!")
+        """2FA não está disponível ainda — informa o usuário"""
+        return rx.toast.info(
+            "Autenticação de dois fatores estará disponível em breve. "
+            "Estamos trabalhando na integração com TOTP (Google Authenticator)."
+        )
 
-    def request_data_export(self):
-        """Solicita exportacao de dados (LGPD)"""
-        return rx.toast.info("Solicitacao de exportacao enviada. Voce recebera um email em ate 48h.")
+    async def request_data_export(self):
+        """Exporta todos os dados do usuário (LGPD compliance)"""
+        from datetime import datetime
+        try:
+            from ..services.local_storage import local_storage
+            tenant_id = self.current_tenant.id if self.current_tenant else "local"
+            user_id = self.current_user.id if self.current_user else ""
 
-    def request_account_deletion(self):
-        """Solicita exclusao de conta (LGPD)"""
-        return rx.toast.warning("Para excluir sua conta, entre em contato com suporte@labbridge.com.br")
+            export_data = {
+                "usuario": {
+                    "email": self.current_user.email if self.current_user else "",
+                    "nome": self.settings_name,
+                    "role": self.current_user.role if self.current_user else "",
+                },
+                "laboratorio": {
+                    "nome": self.lab_name,
+                    "cnpj": self.lab_cnpj,
+                },
+                "configuracoes": local_storage.get_user_settings(tenant_id, user_id) or {},
+                "analises_salvas": local_storage.get_saved_analyses(tenant_id, limit=9999),
+                "membros_equipe": local_storage.get_team_members(tenant_id),
+                "logs_atividade": local_storage.get_activity_logs(tenant_id, limit=9999),
+                "notificacoes": local_storage.get_notifications(tenant_id, limit=9999),
+                "exportado_em": datetime.now().isoformat(),
+            }
+
+            import json
+            payload = json.dumps(export_data, indent=2, ensure_ascii=False, default=str)
+            filename = f"labbridge_dados_{tenant_id}_{datetime.now().strftime('%Y%m%d')}.json"
+            return rx.download(data=payload.encode("utf-8"), filename=filename)
+
+        except Exception as e:
+            logger.error(f"Erro na exportação LGPD: {e}")
+            return rx.toast.error(f"Erro ao exportar dados: {str(e)}")
+
+    async def request_account_deletion(self):
+        """Solicita exclusão de conta (LGPD) — envia email ao suporte"""
+        from datetime import datetime
+        try:
+            from ..services.email_service import email_service
+
+            user_email = self.current_user.email if self.current_user else "desconhecido"
+            tenant_name = self.current_tenant.name if self.current_tenant else "desconhecido"
+            tenant_id = self.current_tenant.id if self.current_tenant else ""
+
+            content = f"""
+            <p><strong>Solicitação de exclusão de conta (LGPD):</strong></p>
+            <ul>
+                <li><strong>Email:</strong> {user_email}</li>
+                <li><strong>Laboratório:</strong> {tenant_name}</li>
+                <li><strong>Tenant ID:</strong> {tenant_id}</li>
+                <li><strong>Data:</strong> {datetime.now().strftime('%d/%m/%Y %H:%M')}</li>
+            </ul>
+            <p>De acordo com a LGPD, esta solicitação deve ser atendida em até 15 dias.</p>
+            """
+
+            email_service.send_email(
+                to_email="suporte@labbridge.com.br",
+                subject=f"[LGPD] Solicitação de exclusão - {user_email}",
+                html_content=content,
+                from_name="LabBridge LGPD",
+            )
+
+            return rx.toast.success(
+                "Solicitação de exclusão enviada. "
+                "Sua conta será removida em até 15 dias conforme a LGPD."
+            )
+        except Exception as e:
+            logger.error(f"Erro na solicitação de exclusão: {e}")
+            return rx.toast.error("Erro ao enviar solicitação. Tente novamente ou contate suporte@labbridge.com.br")

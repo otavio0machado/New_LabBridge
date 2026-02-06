@@ -21,6 +21,10 @@ class AuthState(rx.State):
     login_error: str = ""
     login_loading: bool = False
 
+    # Rate limiting: track failed login attempts
+    _login_attempts: int = 0
+    _login_lockout_until: float = 0.0  # timestamp
+
     # Registro
     register_lab_name: str = ""
     register_email: str = ""
@@ -120,10 +124,18 @@ class AuthState(rx.State):
     async def attempt_login(self):
         """Tenta realizar login com as credenciais fornecidas"""
         from ..services.auth_service import auth_service
+        import time
 
         # Validacao basica
         if not self.login_email or not self.login_password:
             self.login_error = "Preencha email e senha"
+            return
+
+        # Rate limiting: bloquear após 5 tentativas falhas por 60 segundos
+        now = time.time()
+        if self._login_lockout_until > now:
+            remaining = int(self._login_lockout_until - now)
+            self.login_error = f"Muitas tentativas. Aguarde {remaining}s antes de tentar novamente."
             return
 
         self.login_loading = True
@@ -138,6 +150,10 @@ class AuthState(rx.State):
             )
 
             if success:
+                # Reset rate limiter on success
+                self._login_attempts = 0
+                self._login_lockout_until = 0.0
+
                 # Extrair dados
                 user_data = data.get("user", {})
                 profile_data = data.get("profile", {})
@@ -186,7 +202,21 @@ class AuthState(rx.State):
                 yield rx.redirect("/")
 
             else:
-                self.login_error = error or "Erro desconhecido no login"
+                # Check if this is an email verification error (don't count as rate limit attempt)
+                if error and ("nao confirmado" in error.lower() or "not confirmed" in error.lower()):
+                    self.login_error = "Email nao verificado. Verifique sua caixa de entrada (e spam) para ativar sua conta."
+                    self.is_authenticated = False
+                    return
+
+                # Increment rate limiter on failure
+                self._login_attempts += 1
+                if self._login_attempts >= 5:
+                    self._login_lockout_until = time.time() + 60  # Lock for 60 seconds
+                    self._login_attempts = 0
+                    self.login_error = "Muitas tentativas falhas. Conta bloqueada por 60 segundos."
+                else:
+                    remaining = 5 - self._login_attempts
+                    self.login_error = error or f"Credenciais inválidas. {remaining} tentativa(s) restante(s)."
                 self.is_authenticated = False
 
         except Exception as e:
@@ -237,7 +267,10 @@ class AuthState(rx.State):
             )
 
             if success:
-                self.register_success = data.get("message", "Conta criada com sucesso!")
+                self.register_success = (
+                    "Conta criada com sucesso! Verifique seu email para confirmar o cadastro. "
+                    "Voce recebera um link de ativacao em instantes."
+                )
                 self.register_error = ""
 
                 # Limpar campos
@@ -246,10 +279,10 @@ class AuthState(rx.State):
                 self.register_password = ""
                 self.register_confirm_password = ""
 
-                # Alternar para view de login apos 2 segundos
+                # Alternar para view de login apos 3 segundos (mais tempo para ler mensagem)
                 yield
                 import asyncio
-                await asyncio.sleep(2)
+                await asyncio.sleep(3)
                 self.show_register = False
 
             else:
@@ -429,6 +462,8 @@ class AuthState(rx.State):
         """Processa callback do OAuth após autenticação"""
         from ..services.auth_service import auth_service
 
+        self.oauth_error = ""
+
         try:
             # Verificar se há sessão válida
             user = auth_service.get_current_user()
@@ -468,8 +503,8 @@ class AuthState(rx.State):
                 self.is_authenticated = True
                 return rx.redirect("/")
             else:
-                return rx.redirect("/login")
+                self.oauth_error = "Sessão não encontrada. Tente fazer login novamente."
 
         except Exception as e:
             logger.error(f"Erro no callback OAuth: {e}")
-            return rx.redirect("/login")
+            self.oauth_error = f"Erro ao processar autenticação: {str(e)}"
