@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     gettext-base \
     dos2unix \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar dependencias Python (cache layer separado)
@@ -26,21 +27,22 @@ COPY . .
 # Aumentar limite de memoria do Node para build do frontend
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Inicializar e buildar frontend
+# Build do frontend
 RUN rm -rf .web/build .web/dev-server
 RUN reflex init
 RUN reflex export --frontend-only --no-zip --loglevel debug
 
-# Copiar template do nginx (sera processado pelo start.sh com envsubst)
-COPY nginx.conf.template /app/nginx.conf.template
+# Verificar que o build produziu os arquivos esperados
+RUN test -f /app/.web/build/client/index.html || (echo "BUILD FAILED: index.html not found" && exit 1)
+RUN echo "Build OK: $(find /app/.web/build/client -name '*.html' -type f | wc -l) HTML files"
 
-# Preparar start.sh (converter CRLF -> LF para Windows compatibility)
+# Preparar start.sh
 RUN dos2unix start.sh && chmod +x start.sh
+RUN dos2unix nginx.conf.template
 
 # Criar diretorio para uploads
 RUN mkdir -p /app/uploaded_files
 
-# Railway define PORT dinamicamente; EXPOSE e apenas documentacao
-EXPOSE ${PORT:-8080}
+EXPOSE 8080
 
 CMD ["./start.sh"]
