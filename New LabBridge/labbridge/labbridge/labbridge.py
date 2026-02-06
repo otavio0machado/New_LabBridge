@@ -147,6 +147,7 @@ app = rx.App(
         accent_color="blue",
         gray_color="slate",
         radius="large",
+        appearance="light",
     ),
     head_components=[
         # Favicon
