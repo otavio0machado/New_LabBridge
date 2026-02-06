@@ -83,10 +83,10 @@ http {
         }
 
         # Frontend - arquivos estaticos gerados pelo Reflex
-        # Ordem: arquivo exato -> arquivo.html -> SPA fallback
         location / {
             root /app/.web/build/client;
-            try_files $uri $uri.html /__spa-fallback.html;
+            index index.html;
+            try_files $uri $uri/ /index.html;
             add_header Cache-Control "public, max-age=3600";
         }
 
