@@ -236,8 +236,9 @@ html {
 /* Hide "Built with Reflex" badge */
 a[href="https://reflex.dev"] {
     display: none !important;
-}
-
-div:has(> a[href="https://reflex.dev"]) {
-    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
 }
