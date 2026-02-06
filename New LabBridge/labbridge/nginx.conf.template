@@ -46,7 +46,6 @@ http {
         server_name _;
 
         root /app/.web/build/client;
-        index index.html;
 
         # Health check para Railway
         location /healthz {
@@ -79,7 +78,7 @@ http {
             proxy_pass http://127.0.0.1:8000;
         }
 
-        location /ping {
+        location = /ping {
             proxy_pass http://127.0.0.1:8000;
         }
 
@@ -97,9 +96,12 @@ http {
             add_header Cache-Control "public, immutable";
         }
 
-        # Frontend - todas as rotas
+        # Frontend - Reflex 0.8+ usa React Router
+        # $uri           = arquivo exato (JS, CSS, imagens)
+        # $uri/index.html = paginas pre-renderizadas (dashboard/index.html)
+        # /404.html      = SPA fallback oficial do Reflex (catch-all)
         location / {
-            try_files $uri $uri/ /index.html;
+            try_files $uri $uri/index.html /404.html;
         }
     }
 }
